@@ -1,0 +1,19 @@
+# Mirrors `main` to GitHub on every push, purely so Render/Vercel (which
+# don't support this university's self-hosted GitLab) have something to
+# deploy from. GitLab stays the real repo - never push to GitHub directly,
+# it just gets overwritten on the next mirror run.
+#
+# Requires a GitLab CI/CD variable named GITHUB_MIRROR_TOKEN (a GitHub
+# Personal Access Token with push access to the mirror repo), added as
+# Settings -> CI/CD -> Variables, marked both Protected and Masked.
+
+mirror-to-github:
+  stage: deploy
+  image: alpine/git:latest
+  variables:
+    GIT_DEPTH: 0
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  script:
+    - git remote add github "https://adriaanHiemstra:${GITHUB_MIRROR_TOKEN}@github.com/adriaanHiemstra/resvis-west-coast-vikings.git"
+    - git push github HEAD:main --force
