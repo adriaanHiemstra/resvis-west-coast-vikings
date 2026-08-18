@@ -14,14 +14,15 @@ app = FastAPI(title="ResViz API")
 # Allows the deployed frontend (and local dev) to actually call this
 # API from a browser - without this, the browser blocks the request
 # before it even reaches our routes, regardless of anything else being
-# correct. Add each teammate's Vercel preview URL here too if you end
-# up testing against those instead of the shared production one.
+# correct. Matched by regex rather than one exact URL, since Vercel
+# gives every deployment (production, git-branch, and each individual
+# build) its own unique subdomain that changes over time - this covers
+# all of them for our project specifically, without allowing arbitrary
+# other sites.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://resvis-west-coast-vikings-pzpz-p9t7o3uc7.vercel.app",
-    ],
+    allow_origins=["http://localhost:5173"],
+    allow_origin_regex=r"https://resvis-west-coast-vikings.*\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
