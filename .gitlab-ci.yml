@@ -6,10 +6,17 @@
 # Requires a GitLab CI/CD variable named GITHUB_MIRROR_TOKEN (a GitHub
 # Personal Access Token with push access to the mirror repo), added as
 # Settings -> CI/CD -> Variables, marked both Protected and Masked.
+#
+# Runs on a project runner registered on Adriaan's laptop (tag
+# resvis-local, shell executor) - the department's shared instance
+# runners have been stale for 3+ years, so this job won't pick up on
+# instance runners even though they're technically enabled. No Docker
+# image needed since the shell executor just runs `git` directly.
 
 mirror-to-github:
   stage: deploy
-  image: alpine/git:latest
+  tags:
+    - resvis-local
   variables:
     GIT_DEPTH: 0
   rules:
