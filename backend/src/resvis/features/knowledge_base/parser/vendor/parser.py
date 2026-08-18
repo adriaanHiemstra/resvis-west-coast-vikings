@@ -1,5 +1,5 @@
 import ply.yacc as yacc
-from lexer import tokens
+from .lexer import tokens
 
 class Node(object):
 	def __init__(self, label, left=None, right=None):
@@ -64,4 +64,4 @@ def p_atom(p):
 def p_error(p):
 	print("Syntax error in input!", p)
 
-parser = yacc.yacc()
+parser = yacc.yacc(write_tables=False, debug=False)
