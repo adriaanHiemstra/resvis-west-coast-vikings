@@ -22,5 +22,8 @@ mirror-to-github:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    - git remote add github "https://adriaanHiemstra:${GITHUB_MIRROR_TOKEN}@github.com/adriaanHiemstra/resvis-west-coast-vikings.git"
-    - git push github HEAD:main --force
+    # Pushed straight to a URL (no named remote) since the shell
+    # executor reuses the same checkout between runs - a named remote
+    # from a previous run would make "git remote add" fail the second
+    # time around.
+    - git push "https://adriaanHiemstra:${GITHUB_MIRROR_TOKEN}@github.com/adriaanHiemstra/resvis-west-coast-vikings.git" HEAD:main --force
