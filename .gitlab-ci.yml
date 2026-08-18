@@ -26,4 +26,4 @@ mirror-to-github:
     # executor reuses the same checkout between runs - a named remote
     # from a previous run would make "git remote add" fail the second
     # time around.
-    - git push "https://adriaanHiemstra:${GITHUB_MIRROR_TOKEN}@github.com/adriaanHiemstra/resvis-west-coast-vikings.git" HEAD:main --force
+    - git push "https://adriaanHiemstra:${GITHUB_MIRROR_TOKEN}@github.com/adriaanHiemstra/resvis-west-coast-vikings.git" HEAD:refs/heads/main --force
