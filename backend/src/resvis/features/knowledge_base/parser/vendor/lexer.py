@@ -25,9 +25,16 @@ def t_LETTER(t):
 
 t_ignore  = ' \t'
 
+class LexError(Exception):
+	"""Raised on a character the lexer doesn't recognize. `position` is
+	the character offset into the input string where it was found."""
+	def __init__(self, character, position):
+		self.character = character
+		self.position = position
+		super().__init__(f"Illegal character '{character}' at position {position}")
+
 def t_error(t):
-	print("Illegal character '%s'" % t.value[0])
-	t.lexer.skip(1)
+	raise LexError(t.value[0], t.lexpos)
 
 lexer = lex.lex()
 

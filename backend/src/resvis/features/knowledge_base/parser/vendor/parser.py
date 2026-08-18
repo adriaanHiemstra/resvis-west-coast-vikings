@@ -1,5 +1,5 @@
 import ply.yacc as yacc
-from lexer import tokens
+from .lexer import tokens
 
 class Node(object):
 	def __init__(self, label, left=None, right=None):
@@ -61,7 +61,21 @@ def p_atom(p):
 	p[0] = Node(p[1])
 	return p
 
-def p_error(p):
-	print("Syntax error in input!", p)
+class ParseError(Exception):
+	"""Raised when the token stream doesn't match any grammar rule.
+	`token` is the offending LexToken, or None if input ended too soon
+	(e.g. unbalanced parens) - `position` follows the same rule."""
+	def __init__(self, token):
+		self.token = token
+		if token is None:
+			self.position = None
+			message = "Unexpected end of input"
+		else:
+			self.position = token.lexpos
+			message = f"Unexpected token '{token.value}'"
+		super().__init__(message)
 
-parser = yacc.yacc()
+def p_error(p):
+	raise ParseError(p)
+
+parser = yacc.yacc(write_tables=False, debug=False)
