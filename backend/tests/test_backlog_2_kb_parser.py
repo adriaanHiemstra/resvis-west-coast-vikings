@@ -13,6 +13,7 @@ import pytest
 
 from resvis.features.knowledge_base.parser.adapter import ParserAdapter
 from resvis.features.knowledge_base.parser.tree_serializer import serialize_node
+from resvis.features.knowledge_base.service import KnowledgeBaseService
 from resvis.shared.errors import FormulaSyntaxError
 
 
@@ -98,3 +99,35 @@ def test_two_atoms_with_no_operator_raises_formula_syntax_error():
     detail = exc_info.value.detail
     assert detail.code == "UNEXPECTED_TOKEN"
     assert detail.position == 2  # index of 'Q' in "P Q"
+
+
+def test_service_parse_formula_reports_success_for_valid_input():
+    result = KnowledgeBaseService().parse_formula("(P & Q)")
+    assert result["success"] is True
+    assert result["error"] is None
+    assert result["tree"]["label"] == "&"
+
+
+def test_service_parse_formula_reports_failure_instead_of_raising():
+    """The service's whole job is to never let a bad formula surface as
+    an exception - it becomes a normal, inspectable result instead."""
+    result = KnowledgeBaseService().parse_formula("(P @ Q)")
+    assert result["success"] is False
+    assert result["tree"] is None
+    assert result["error"]["code"] == "ILLEGAL_CHARACTER"
+
+
+def test_service_parse_formulas_preserves_request_order():
+    formulas = ["P", "Q", "R"]
+    results = KnowledgeBaseService().parse_formulas(formulas)
+    assert [r["formula"] for r in results] == formulas
+
+
+def test_service_parse_formulas_one_bad_formula_does_not_block_the_rest():
+    """Backlog 5 (visualiser)/Phase 5 requirement: a batch with a mix of
+    valid and invalid formulas still returns a result for every formula,
+    each reporting its own success/failure independently."""
+    formulas = ["(P & Q)", "(P @ Q)", "(R -> S)"]
+    results = KnowledgeBaseService().parse_formulas(formulas)
+    assert [r["success"] for r in results] == [True, False, True]
+    assert len(results) == 3
