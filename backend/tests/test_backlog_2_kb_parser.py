@@ -2,13 +2,18 @@
 
 Phase 1 + 2 coverage: the adapter can turn formula text into a syntax
 tree via the vendored parser, and that tree can be turned into a plain
-dict so it's ready to travel over JSON. Error-path tests (malformed
-input) are added in Phase 3, once the adapter actually raises a
-structured error instead of printing to the console.
+dict so it's ready to travel over JSON. Phase 3 coverage: malformed
+input raises a structured FormulaSyntaxError instead of silently
+returning None (the vendored parser's original behavior — see
+parser/vendor/lexer.py's LexError and parser/vendor/parser.py's
+ParseError, which the adapter catches and translates).
 """
+
+import pytest
 
 from resvis.features.knowledge_base.parser.adapter import ParserAdapter
 from resvis.features.knowledge_base.parser.tree_serializer import serialize_node
+from resvis.shared.errors import FormulaSyntaxError
 
 
 def test_parses_bare_letter_as_a_leaf_node():
@@ -65,3 +70,31 @@ def test_source_text_is_preserved_on_the_syntax_tree():
 
 def test_serialize_node_of_none_is_none():
     assert serialize_node(None) is None
+
+
+def test_illegal_character_raises_formula_syntax_error_with_position():
+    with pytest.raises(FormulaSyntaxError) as exc_info:
+        ParserAdapter().parse_formula("(P @ Q)")
+    detail = exc_info.value.detail
+    assert detail.code == "ILLEGAL_CHARACTER"
+    assert detail.position == 3  # index of '@' in "(P @ Q)"
+
+
+def test_unbalanced_parens_raises_formula_syntax_error_at_end_of_text():
+    """Use Case: Upload a knowledge base — "System reports the error and
+    indicates the affected section so User can correct the source file
+    and re-upload." """
+    text = "(P -> "
+    with pytest.raises(FormulaSyntaxError) as exc_info:
+        ParserAdapter().parse_formula(text)
+    detail = exc_info.value.detail
+    assert detail.code == "UNEXPECTED_END"
+    assert detail.position == len(text)
+
+
+def test_two_atoms_with_no_operator_raises_formula_syntax_error():
+    with pytest.raises(FormulaSyntaxError) as exc_info:
+        ParserAdapter().parse_formula("P Q")
+    detail = exc_info.value.detail
+    assert detail.code == "UNEXPECTED_TOKEN"
+    assert detail.position == 2  # index of 'Q' in "P Q"
