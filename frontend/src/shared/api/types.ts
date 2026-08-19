@@ -46,9 +46,8 @@ export interface ParseError {
 
 export interface Annotation {
   id: string;
-  clauseIndex: number;
-  clauseText: string;
-  note: string;
+  symbol: string;
+  meaning: string;
   createdAt: string;
 }
 

@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import type { Annotation, DerivationTrace, Project, ProjectDraft } from "@shared/api/types";
+import type { DerivationTrace, Project, ProjectDraft } from "@shared/api/types";
 import { useLocalStorage } from "./useLocalStorage";
 
 const PROJECTS_KEY = "resviz-projects-v1";
@@ -122,18 +122,18 @@ export function useProjects() {
     [setProjects],
   );
 
-  const addAnnotation = useCallback(
-    (id: string, annotation: Omit<Annotation, "id" | "createdAt">) => {
+  const upsertAnnotation = useCallback(
+    (id: string, symbol: string, meaning: string) => {
       setProjects((prev) =>
-        prev.map((p) =>
-          p.id === id
-            ? {
-                ...p,
-                annotations: [{ ...annotation, id: uid("note"), createdAt: nowIso() }, ...p.annotations],
-                updatedAt: nowIso(),
-              }
-            : p,
-        ),
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          const timestamp = nowIso();
+          const exists = p.annotations.some((a) => a.symbol === symbol);
+          const annotations = exists
+            ? p.annotations.map((a) => (a.symbol === symbol ? { ...a, meaning, createdAt: timestamp } : a))
+            : [{ id: uid("note"), symbol, meaning, createdAt: timestamp }, ...p.annotations];
+          return { ...p, annotations, updatedAt: timestamp };
+        }),
       );
     },
     [setProjects],
@@ -165,7 +165,7 @@ export function useProjects() {
     updateProject,
     setTrace,
     setTraceIndex,
-    addAnnotation,
+    upsertAnnotation,
     removeAnnotation,
   };
 }

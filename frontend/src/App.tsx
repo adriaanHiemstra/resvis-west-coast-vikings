@@ -1,11 +1,14 @@
-import { useState } from "react";
-import { FolderOpen, Network, PenLine, Plus, StickyNote } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, FolderOpen, Network, PenLine, Plus, StickyNote } from "lucide-react";
 import type { Project, ProjectDraft } from "@shared/api/types";
 import { Logo, LogoMark, Button, Toast } from "@shared/components";
+import { formatDate } from "@shared/lib/format";
 import { useProjects, useToast } from "@shared/hooks";
 import { ProjectCreate, ProjectLibrary } from "@features/project";
+import { KnowledgeBaseUpload, ClauseReview } from "@features/knowledge-base";
+import { PropositionEditor } from "@features/proposition-input";
 
-type ViewName = "home" | "projects";
+type ViewName = "home" | "projects" | "workspace";
 
 export default function App() {
   const [view, setView] = useState<ViewName>("home");
@@ -13,8 +16,32 @@ export default function App() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const { toastMessage, showToast } = useToast();
-  const { projects, selectedProject, createProject, renameProject, duplicateProject, deleteProject, openProject } =
-    useProjects();
+  const {
+    projects,
+    selectedProject,
+    createProject,
+    renameProject,
+    duplicateProject,
+    deleteProject,
+    openProject,
+    updateProject,
+    upsertAnnotation,
+    removeAnnotation,
+  } = useProjects();
+
+  useEffect(() => {
+    if (view === "workspace" && !selectedProject) setView("projects");
+  }, [view, selectedProject]);
+
+  const editorSummary = useMemo(() => {
+    if (!selectedProject) return "";
+    const clauseCount = selectedProject.knowledgeBase
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean).length;
+    const goalReady = selectedProject.goal.trim() !== "";
+    return `${clauseCount} knowledge clause${clauseCount === 1 ? "" : "s"} · ${goalReady ? "goal ready" : "add a goal"}`;
+  }, [selectedProject]);
 
   function openCreateModal() {
     setEditingProject(null);
@@ -33,6 +60,7 @@ export default function App() {
     } else {
       const project = createProject(draft);
       openProject(project.id);
+      setView("workspace");
       showToast("Project created.");
     }
     setModalOpen(false);
@@ -41,12 +69,16 @@ export default function App() {
 
   function handleOpenProject(id: string) {
     openProject(id);
-    showToast("Not yet implemented.");
+    setView("workspace");
   }
 
   function handleDeleteProject(id: string) {
     deleteProject(id);
     showToast("Project deleted.");
+  }
+
+  function handleRun() {
+    showToast("The resolution engine is not yet implemented. This is a placeholder.");
   }
 
   return (
@@ -132,6 +164,52 @@ export default function App() {
               onDelete={handleDeleteProject}
             />
           </div>
+        )}
+
+        {view === "workspace" && selectedProject && (
+          <section aria-labelledby="workspace-heading" className="animate-viewIn">
+            <div className="mb-6 flex flex-col gap-4 border-b border-line pb-6 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.17em] text-[#517063]">Resolution workspace</p>
+                <h1 id="workspace-heading" className="mt-1 text-3xl font-bold tracking-tight text-ink">
+                  Resolve a logical goal
+                </h1>
+                <p className="mt-2 text-sm text-muted">
+                  Student: {selectedProject.studentName} · Last edited {formatDate(selectedProject.updatedAt)}
+                </p>
+              </div>
+              <Button variant="secondary" icon={<ArrowLeft size={16} />} onClick={() => setView("projects")}>
+                All Projects
+              </Button>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)]">
+              <div className="space-y-6">
+                <KnowledgeBaseUpload
+                  value={selectedProject.knowledgeBase}
+                  error={null}
+                  projectName={selectedProject.name}
+                  onChange={(value) => updateProject(selectedProject.id, { knowledgeBase: value })}
+                />
+                <PropositionEditor
+                  value={selectedProject.goal}
+                  error={null}
+                  summary={editorSummary}
+                  running={false}
+                  onChange={(value) => updateProject(selectedProject.id, { goal: value })}
+                  onRun={handleRun}
+                />
+              </div>
+              <aside className="space-y-6">
+                <ClauseReview
+                  knowledgeBase={selectedProject.knowledgeBase}
+                  annotations={selectedProject.annotations}
+                  onSave={(symbol, meaning) => upsertAnnotation(selectedProject.id, symbol, meaning)}
+                  onRemove={(annotationId) => removeAnnotation(selectedProject.id, annotationId)}
+                />
+              </aside>
+            </div>
+          </section>
         )}
       </main>
 
