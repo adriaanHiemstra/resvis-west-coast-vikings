@@ -70,7 +70,7 @@ export function ClauseReview({ knowledgeBase, annotations, onSave, onRemove }: C
           onChange={(e) => setMeaning(e.target.value)}
           disabled={symbols.length === 0}
           className="w-full resize-y border border-[#b7c7bb] bg-[#fbfaf5] p-3 text-sm leading-relaxed outline-none focus:border-forest disabled:opacity-55"
-          placeholder="e.g. WetRoad means the access road was flagged as impassable."
+          placeholder=""
         />
         <Button variant="primary" className="mt-3" disabled={symbols.length === 0 || !meaning.trim()} onClick={handleSave}>
           {existingAnnotation ? "Update Note" : "Save Note"}

@@ -38,7 +38,7 @@ export function PropositionEditor({ value, onChange, error, summary, onRun, runn
           aria-invalid={error ? true : undefined}
         />
         <p id="goal-help" className="mt-3 text-sm leading-relaxed text-muted">
-          Enter one literal to test. ResViz adds its negation to the knowledge base and searches for a contradiction.
+          Enter one goal to verify. ResViz runs the resolution against the knowledge base and searches for a contradiction.
         </p>
         {error && (
           <div className="mt-4 border border-[#e6b2a7] bg-danger-soft p-3 text-sm leading-relaxed text-danger-text" role="alert">

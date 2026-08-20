@@ -120,7 +120,7 @@ export default function App() {
               </h1>
               <p className="mt-5 max-w-xl text-lg leading-relaxed text-[#51635a]">
                 Build a small logic case, test a goal against your knowledge base, and follow every derived clause in
-                a calm, student-friendly trace.
+                a step-wise resolution trace.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button variant="primary" icon={<Plus size={18} />} onClick={openCreateModal}>
@@ -144,7 +144,7 @@ export default function App() {
               </div>
               <div className="border border-line bg-warm/85 p-4">
                 <StickyNote className="text-teal" size={20} />
-                <p className="mt-3 text-sm font-semibold text-[#31463b]">Attach useful notes to individual clauses.</p>
+                <p className="mt-3 text-sm font-semibold text-[#31463b]">Attach useful notes to individual symbols.</p>
               </div>
             </div>
           </section>
