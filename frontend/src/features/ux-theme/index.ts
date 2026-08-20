@@ -1,0 +1,1 @@
+export { palette, verdictLabel, verdictTone } from "./theme";

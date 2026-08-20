@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans;
+  }
+
+  ::selection {
+    @apply bg-lime text-forest;
+  }
+}
+
+@layer components {
+  .app-grid-bg {
+    background-image: linear-gradient(rgba(21, 74, 59, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(21, 74, 59, 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .editor-area {
+    @apply w-full min-h-[220px] outline-none border border-[#b7c7bb] p-4 font-mono text-[0.83rem] leading-[1.85] bg-[#fbfaf5] text-[#1c3128] resize-y;
+  }
+
+  .editor-area:focus {
+    @apply border-forest;
+    box-shadow: inset 0 0 0 1px #154a3b;
+  }
+
+  .symbol-key {
+    @apply min-w-[2.7rem] h-[2.35rem] border border-[#9fb0a5] bg-[#edf0e8] text-forest font-mono text-[1.05rem] transition-transform transition-colors duration-150;
+  }
+
+  .symbol-key:hover {
+    @apply bg-lime -translate-y-0.5;
+  }
+
+  .trace-scroll {
+    max-height: 460px;
+    overflow-y: auto;
+    scrollbar-color: #88a298 transparent;
+    scrollbar-width: thin;
+  }
+
+  .trace-card {
+    position: relative;
+    border-left: 2px solid #9ab4a5;
+    @apply bg-[#faf9f3];
+    transition: border-color 0.18s ease, background 0.18s ease;
+  }
+
+  .trace-card::before {
+    content: "";
+    position: absolute;
+    width: 0.58rem;
+    height: 0.58rem;
+    border: 2px solid #154a3b;
+    background: #d8f178;
+    left: -0.39rem;
+    top: 1.2rem;
+    border-radius: 50%;
+  }
+
+  .trace-card.is-current {
+    border-left-color: #177d78;
+    @apply bg-[#eef8f4];
+    box-shadow: inset 0 0 0 1px rgba(23, 125, 120, 0.18);
+  }
+
+  .trace-card.is-final {
+    border-left-color: #b33c2f;
+    @apply bg-danger-soft;
+  }
+
+  .trace-card.is-final::before {
+    border-color: #b33c2f;
+    background: #ffb19f;
+  }
+}

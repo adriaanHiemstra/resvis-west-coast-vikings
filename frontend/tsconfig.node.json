@@ -5,7 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "outDir": "./node_modules/.tsbuild-node"
+    "outDir": "./node_modules/.tsbuild-node",
   },
   "include": ["vite.config.ts"]
 }
