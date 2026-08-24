@@ -131,3 +131,19 @@ def test_service_parse_formulas_one_bad_formula_does_not_block_the_rest():
     results = KnowledgeBaseService().parse_formulas(formulas)
     assert [r["success"] for r in results] == [True, False, True]
     assert len(results) == 3
+
+
+def test_parses_multi_letter_word_as_a_single_atom():
+    """Words like "Rain" are one atom, not four separate letters -
+    needed so knowledge-base symbols stay human-readable and
+    annotatable (e.g. "Rain" -> "it's raining today")."""
+    tree = ParserAdapter().parse_formula("Rain")
+    assert serialize_node(tree.root) == {"label": "Rain", "left": None, "right": None}
+
+
+def test_parses_unicode_operators_matching_the_frontend_symbol_palette():
+    """The frontend's symbol palette inserts ¬ ∧ ∨ → ↔, not the ASCII
+    ~ & | -> <-> forms - both must parse to the same result."""
+    ascii_tree = ParserAdapter().parse_formula("(Rain -> WetRoad)")
+    unicode_tree = ParserAdapter().parse_formula("(Rain → WetRoad)")
+    assert serialize_node(ascii_tree.root) == serialize_node(unicode_tree.root)

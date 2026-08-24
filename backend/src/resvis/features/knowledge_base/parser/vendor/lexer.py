@@ -11,16 +11,43 @@ tokens = (
 	'RPAREN',
 )
 
-t_CONJUCTION    = r'\&'
-t_NEGATION  = r'\~'
-t_DISJUNCTION   = r'\|'
-t_EQUIV   = r'<->'
-t_IMPLICATION = '->'
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
 
+# Each of these accepts either the ASCII form or the equivalent unicode
+# symbol (the frontend's palette inserts unicode) but normalizes
+# t.value to one canonical spelling either way, so nothing downstream
+# (CNF conversion, resolution) ever has to handle two spellings of the
+# same operator. Order matters: EQUIV must come before IMPLICATION so
+# "<->" isn't matched as "->" first.
+
+def t_CONJUCTION(t):
+	r'\&|∧'
+	t.value = '&'
+	return t
+
+def t_NEGATION(t):
+	r'\~|¬'
+	t.value = '~'
+	return t
+
+def t_DISJUNCTION(t):
+	r'\||∨'
+	t.value = '|'
+	return t
+
+def t_EQUIV(t):
+	r'<->|↔'
+	t.value = '<->'
+	return t
+
+def t_IMPLICATION(t):
+	r'->|→'
+	t.value = '->'
+	return t
+
 def t_LETTER(t):
-	r'(\d\-)*[a-zA-Z](\d,\d)*'
+	r'[a-zA-Z][a-zA-Z0-9]*'
 	return t
 
 t_ignore  = ' \t'

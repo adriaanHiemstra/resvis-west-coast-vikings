@@ -87,8 +87,7 @@ export function KnowledgeBaseUpload({ value, onChange, error, projectName }: Kno
           aria-invalid={error ? true : undefined}
         />
         <p id="knowledge-help" className="mt-3 text-sm leading-relaxed text-muted">
-          Write one clause per line. Use ∨, |, commas, or OR between literals. Negate with ¬, ~, or !. Example: ¬Rain
-          ∨ WetRoad
+          {'Write one clause per line. Every operation needs its own parentheses — e.g. (¬Rain ∨ WetRoad), not ¬Rain ∨ WetRoad. Use ∨ or | for OR, ∧ or & for AND, → or -> for IMPLIES. A single negation doesn\'t need parentheses, e.g. ¬Rain.'}
         </p>
         <SymbolPalette
           ariaLabel="Logical symbol palette for knowledge base"

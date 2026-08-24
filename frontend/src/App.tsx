@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, FolderOpen, Network, PenLine, Plus, StickyNote } from "lucide-react";
 import type { Project, ProjectDraft } from "@shared/api/types";
+import { parseFormulas } from "@shared/api/client";
 import { Logo, LogoMark, Button, Toast } from "@shared/components";
 import { formatDate } from "@shared/lib/format";
 import { useProjects, useToast } from "@shared/hooks";
@@ -14,6 +15,7 @@ export default function App() {
   const [view, setView] = useState<ViewName>("home");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [running, setRunning] = useState(false);
 
   const { toastMessage, showToast } = useToast();
   const {
@@ -77,8 +79,25 @@ export default function App() {
     showToast("Project deleted.");
   }
 
-  function handleRun() {
-    showToast("The resolution engine is not yet implemented. This is a placeholder.");
+  async function handleRun() {
+    if (!selectedProject) return;
+    const formulas = [
+      ...selectedProject.knowledgeBase.split(/\r?\n/).map((l) => l.trim()).filter(Boolean),
+      selectedProject.goal.trim(),
+    ].filter(Boolean);
+
+    setRunning(true);
+    try {
+      const results = await parseFormulas(formulas);
+      const summary = results
+        .map((r) => (r.success ? `✓ ${r.formula}` : `✗ ${r.formula}: ${r.error?.message}`))
+        .join("  ·  ");
+      showToast(summary || "Add a knowledge base clause or goal first.");
+    } catch {
+      showToast("Could not reach the backend — is it running?");
+    } finally {
+      setRunning(false);
+    }
   }
 
   return (
@@ -195,7 +214,7 @@ export default function App() {
                   value={selectedProject.goal}
                   error={null}
                   summary={editorSummary}
-                  running={false}
+                  running={running}
                   onChange={(value) => updateProject(selectedProject.id, { goal: value })}
                   onRun={handleRun}
                 />
