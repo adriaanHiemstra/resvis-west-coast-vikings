@@ -12,6 +12,7 @@ from resvis.features.knowledge_base.parser.vendor.lexer import LexError
 from resvis.features.knowledge_base.parser.vendor.parser import Node, ParseError
 from resvis.features.knowledge_base.parser.vendor.parser import parser as _vendor_parser
 from resvis.shared.errors import FormulaSyntaxError, SyntaxErrorDetail
+from resvis.shared.config import MAX_FORMULA_LENGTH
 
 
 @dataclass
@@ -40,6 +41,15 @@ class ParserAdapter:
                     position=0,
                     message="The formula you have entered is empty.")
                 )
+        if len(text) > MAX_FORMULA_LENGTH:
+            raise FormulaSyntaxError(
+                SyntaxErrorDetail(
+                        code="FORMULA TOO LONG",
+                        position=MAX_FORMULA_LENGTH,
+                        message=f"Formula Exceeds the maximum length of {MAX_FORMULA_LENGTH} characters.",
+                    )
+                )
+            
             
         try:
             root = _vendor_parser.parse(text)
@@ -52,11 +62,17 @@ class ParserAdapter:
                 )
             ) from exc
         except ParseError as exc:
+            if exc.token is not None and exc.token.type in ("CONJUCTION", "DISJUNCTION", "IMPLICATION", "EQUIV"):
+                message = "If you use Binary operations they will need their own parentheses, e.g. (P -> Q)."
+            else:
+                message = str(exc)
             raise FormulaSyntaxError(
-                SyntaxErrorDetail(
-                    code="UNEXPECTED_TOKEN" if exc.position is not None else "UNEXPECTED_END",
-                    position=exc.position if exc.position is not None else len(text),
-                    message=str(exc),
-                )
-            ) from exc
+                    SyntaxErrorDetail(
+                        code = "UNEXPECTED_TOKEN" if exc.position is not None else "UNEXPECTED_END",
+                        position = exc.position if exc.position is not None else len(text),
+                        message=message,
+                        )
+                                    
+                                )from exc
+                            
         return SyntaxTree(source_text=text, root=root)

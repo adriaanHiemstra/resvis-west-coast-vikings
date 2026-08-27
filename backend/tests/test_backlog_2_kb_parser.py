@@ -77,7 +77,7 @@ def test_illegal_character_raises_formula_syntax_error_with_position():
     with pytest.raises(FormulaSyntaxError) as exc_info:
         ParserAdapter().parse_formula("(P @ Q)")
     detail = exc_info.value.detail
-    assert detail.code == "ILLEGAL_CHARACTER"
+    assert detail.code == "ILLEGALCHARACTER"
     assert detail.position == 3  # index of '@' in "(P @ Q)"
 
 
@@ -114,7 +114,7 @@ def test_service_parse_formula_reports_failure_instead_of_raising():
     result = KnowledgeBaseService().parse_formula("(P @ Q)")
     assert result["success"] is False
     assert result["tree"] is None
-    assert result["error"]["code"] == "ILLEGAL_CHARACTER"
+    assert result["error"]["code"] == "ILLEGALCHARACTER"
 
 
 def test_service_parse_formulas_preserves_request_order():
@@ -147,3 +147,28 @@ def test_parses_unicode_operators_matching_the_frontend_symbol_palette():
     ascii_tree = ParserAdapter().parse_formula("(Rain -> WetRoad)")
     unicode_tree = ParserAdapter().parse_formula("(Rain → WetRoad)")
     assert serialize_node(ascii_tree.root) == serialize_node(unicode_tree.root)
+
+def test_empty_formula_raises_formula_syntax_error():
+    """Testing whether or not the parser adapter raises a FormulaSyntaxError for an empty formula."""
+    with pytest.raises(FormulaSyntaxError) as syntaxError_info:
+        ParserAdapter().parse_formula("")
+    assert syntaxError_info.value.detail.code == "EMPTY_FORMULA"
+
+def test_empty_formula_with_whitespace_raises_formula_syntax_error():
+    """Testing whether or not the parser adapter raises a FormulaSyntaxError for an empty formula."""
+    with pytest.raises(FormulaSyntaxError) as syntaxError_info:
+        ParserAdapter().parse_formula("   ")
+    assert syntaxError_info.value.detail.code == "EMPTY_FORMULA"
+
+def test_formula_exceeding_max_length_raises_formula_syntax_error():
+    """Testing whether or not the parser addapter raises an error if the formula length is too long"""
+    with pytest.raises(FormulaSyntaxError) as syntaxError_info:
+        ParserAdapter().parse_formula("A" * 501)
+    assert syntaxError_info.value.detail.code == "FORMULA TOO LONG"
+
+def test_missing_parenthesis_raises_formula_syntax_error():
+    """Testing whether or not the parser adapter raises a FormulaSyntaxError for a formula with a missing parenthesis."""
+    with pytest.raises(FormulaSyntaxError) as syntaxError_info:
+        ParserAdapter().parse_formula("P -> Q")
+    assert syntaxError_info.value.detail.code == "UNEXPECTED_TOKEN"
+    assert "parentheses" in syntaxError_info.value.detail.message

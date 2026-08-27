@@ -1,0 +1,2 @@
+MAX_FORMULA_LENGTH = 500
+"""Upper bound on a single formula's character length - this will protect against slow parses and formulas that are too long, as well as Python's recursion limit (Risk 2 Mitigation)"""
