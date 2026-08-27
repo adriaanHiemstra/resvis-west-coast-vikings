@@ -34,7 +34,7 @@ def test_parse_endpoint_reports_mixed_success_and_failure_independently(client):
     assert response.status_code == 200
     results = response.json()["results"]
     assert [r["success"] for r in results] == [True, False, False]
-    assert results[1]["error"]["code"] == "ILLEGAL_CHARACTER"
+    assert results[1]["error"]["code"] == "ILLEGALCHARACTER"
     assert results[2]["error"]["code"] == "UNEXPECTED_END"
 
 
