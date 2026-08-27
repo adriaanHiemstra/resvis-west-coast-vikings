@@ -3,6 +3,7 @@ import { Download, Upload } from "lucide-react";
 import { Panel } from "@shared/components";
 import { insertAtCursor } from "@shared/lib/insertAtCursor";
 import { SymbolPalette } from "@features/proposition-input";
+import { LineByLineEditor } from "./LineByLineEditor";
 
 interface KnowledgeBaseUploadProps {
   value: string;
@@ -94,21 +95,13 @@ export function KnowledgeBaseUpload({
         >
           Facts and clauses
         </label>
-        <textarea
-          id="knowledge-editor"
-          ref={textareaRef}
-          spellCheck={false}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="editor-area"
-          aria-describedby="knowledge-help"
-          aria-invalid={error ? true : undefined}
-        />
+        <LineByLineEditor value={value} onChange={onChange} />
         <p
           id="knowledge-help"
           className="mt-3 text-sm leading-relaxed text-muted"
         >
-          Write one clause per line. Use the symbols from the palette below to represent logical relationships.
+          Write one clause per line. Use the symbols from the palette below to
+          represent logical relationships.
         </p>
         <SymbolPalette
           ariaLabel="Logical symbol palette for knowledge base"
