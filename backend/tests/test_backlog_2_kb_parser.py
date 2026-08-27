@@ -165,3 +165,10 @@ def test_formula_exceeding_max_length_raises_formula_syntax_error():
     with pytest.raises(FormulaSyntaxError) as syntaxError_info:
         ParserAdapter().parse_formula("A" * 501)
     assert syntaxError_info.value.detail.code == "FORMULA TOO LONG"
+
+def test_missing_parenthesis_raises_formula_syntax_error():
+    """Testing whether or not the parser adapter raises a FormulaSyntaxError for a formula with a missing parenthesis."""
+    with pytest.raises(FormulaSyntaxError) as syntaxError_info:
+        ParserAdapter().parse_formula("P -> Q")
+    assert syntaxError_info.value.detail.code == "UNEXPECTED_TOKEN"
+    assert "parentheses" in syntaxError_info.value.detail.message

@@ -62,11 +62,17 @@ class ParserAdapter:
                 )
             ) from exc
         except ParseError as exc:
+            if exc.token is not None and exc.token.type in ("CONJUCTION", "DISJUNCTION", "IMPLICATION", "EQUIV"):
+                message = "If you use Binary operations they will need their own parentheses, e.g. (P -> Q)."
+            else:
+                message = str(exc)
             raise FormulaSyntaxError(
-                SyntaxErrorDetail(
-                    code="UNEXPECTED_TOKEN" if exc.position is not None else "UNEXPECTED_END",
-                    position=exc.position if exc.position is not None else len(text),
-                    message=str(exc),
-                )
-            ) from exc
+                    SyntaxErrorDetail(
+                        code = "UNEXPECTED_TOKEN" if exc.position is not None else "UNEXPECTED_END",
+                        position = exc.position if exc.position is not None else len(text),
+                        message=message,
+                        )
+                                    
+                                )from exc
+                            
         return SyntaxTree(source_text=text, root=root)
