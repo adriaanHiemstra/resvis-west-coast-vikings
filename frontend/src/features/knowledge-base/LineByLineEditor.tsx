@@ -22,15 +22,22 @@ export function LineByLineEditor({ value, onChange }: LineByLineEditorProps) {
     if (event.key !== "Enter") return;
     event.preventDefault();
 
+    const cursorPosition = event.currentTarget.selectionStart ?? lines[index].length;
+    const textBeforeCursor = lines[index].slice(0, cursorPosition);
+    const textAfterCursor = lines[index].slice(cursorPosition);
+
     const nextLines = [
-      ...lines.slice(0, index + 1),
-      "",
+      ...lines.slice(0, index),
+      textBeforeCursor,
+      textAfterCursor,
       ...lines.slice(index + 1),
     ];
     onChange(nextLines.join("\n"));
 
     requestAnimationFrame(() => {
-      inputRefs.current[index + 1]?.focus();
+      const nextInput = inputRefs.current[index + 1];
+      nextInput?.focus();
+      nextInput?.setSelectionRange(0, 0);
     });
   }
 
