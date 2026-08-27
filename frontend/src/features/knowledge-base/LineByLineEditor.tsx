@@ -1,4 +1,5 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { parseFormulas } from "@shared/api/client";
 
 interface LineByLineEditorProps {
   value: string;
@@ -8,11 +9,29 @@ interface LineByLineEditorProps {
 export function LineByLineEditor({ value, onChange }: LineByLineEditorProps) {
   const lines = value.split("\n");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [lineStatuses, setLineStatuses] = useState<
+    Record<number, { status: "valid" | "invalid"; message?: string }>
+  >({});
 
   function handleLineChange(index: number, newText: string) {
     const nextLines = [...lines];
     nextLines[index] = newText;
     onChange(nextLines.join("\n"));
+  }
+
+  async function validateLine(index: number, text: string) {
+    if (!text.trim()) return;
+    try {
+      const [result] = await parseFormulas([text]);
+      setLineStatuses((prev) => ({
+        ...prev,
+        [index]: result.success
+          ? { status: "valid" }
+          : { status: "invalid", message: result.error?.message },
+      }));
+    } catch {
+      console.error("Could not validate line", index);
+    }
   }
 
   function handleLineKeyDown(
@@ -22,7 +41,8 @@ export function LineByLineEditor({ value, onChange }: LineByLineEditorProps) {
     if (event.key !== "Enter") return;
     event.preventDefault();
 
-    const cursorPosition = event.currentTarget.selectionStart ?? lines[index].length;
+    const cursorPosition =
+      event.currentTarget.selectionStart ?? lines[index].length;
     const textBeforeCursor = lines[index].slice(0, cursorPosition);
     const textAfterCursor = lines[index].slice(cursorPosition);
 
@@ -33,6 +53,7 @@ export function LineByLineEditor({ value, onChange }: LineByLineEditorProps) {
       ...lines.slice(index + 1),
     ];
     onChange(nextLines.join("\n"));
+    validateLine(index, textBeforeCursor);
 
     requestAnimationFrame(() => {
       const nextInput = inputRefs.current[index + 1];
