@@ -12,6 +12,7 @@ from resvis.features.knowledge_base.parser.vendor.lexer import LexError
 from resvis.features.knowledge_base.parser.vendor.parser import Node, ParseError
 from resvis.features.knowledge_base.parser.vendor.parser import parser as _vendor_parser
 from resvis.shared.errors import FormulaSyntaxError, SyntaxErrorDetail
+from resvis.shared.config import MAX_FORMULA_LENGTH
 
 
 @dataclass
@@ -40,6 +41,15 @@ class ParserAdapter:
                     position=0,
                     message="The formula you have entered is empty.")
                 )
+        if len(text) > MAX_FORMULA_LENGTH:
+            raise FormulaSyntaxError(
+                SyntaxErrorDetail(
+                        code="FORMULA TOO LONG",
+                        position=MAX_FORMULA_LENGTH,
+                        message=f"Formula Exceeds the maximum length of {MAX_FORMULA_LENGTH} characters.",
+                    )
+                )
+            
             
         try:
             root = _vendor_parser.parse(text)
