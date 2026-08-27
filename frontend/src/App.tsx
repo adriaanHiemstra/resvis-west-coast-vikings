@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, FolderOpen, Network, PenLine, Plus, StickyNote } from "lucide-react";
 import type { Project, ProjectDraft } from "@shared/api/types";
-import { parseFormulas } from "@shared/api/client";
+import { convertFormulas } from "@shared/api/client";
 import { Logo, LogoMark, Button, Toast } from "@shared/components";
 import { formatDate } from "@shared/lib/format";
 import { useProjects, useToast } from "@shared/hooks";
@@ -79,26 +79,47 @@ export default function App() {
     showToast("Project deleted.");
   }
 
-  async function handleRun() {
-    if (!selectedProject) return;
-    const formulas = [
-      ...selectedProject.knowledgeBase.split(/\r?\n/).map((l) => l.trim()).filter(Boolean),
-      selectedProject.goal.trim(),
-    ].filter(Boolean);
+async function handleRun() {
+  if (!selectedProject) return;
 
-    setRunning(true);
-    try {
-      const results = await parseFormulas(formulas);
-      const summary = results
-        .map((r) => (r.success ? `✓ ${r.formula}` : `✗ ${r.formula}: ${r.error?.message}`))
-        .join("  ·  ");
-      showToast(summary || "Add a knowledge base clause or goal first.");
-    } catch {
-      showToast("Could not reach the backend — is it running?");
-    } finally {
-      setRunning(false);
-    }
+  const formulas = [
+    ...selectedProject.knowledgeBase
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean),
+    selectedProject.goal.trim(),
+  ].filter(Boolean);
+
+  if (formulas.length === 0) {
+    showToast("Add a knowledge base clause or goal first.");
+    return;
   }
+
+  setRunning(true);
+
+  try {
+    const results = await convertFormulas(formulas);
+
+    // just to check it works in browser
+    console.log("CNF conversion results:", results);
+
+    // Displays the readable CNF output in the existing toast.
+    const summary = results
+      .map((result) =>
+        result.success
+          ? `${result.formula} → ${result.cnf?.raw}`
+          : `✗ ${result.formula}: ${result.error?.message}`,
+      )
+      .join(" · ");
+
+    showToast(summary);
+  } catch (error) {
+    console.error("CNF conversion request failed:", error);
+    showToast("Could not reach the CNF converter — is the backend running?");
+  } finally {
+    setRunning(false);
+  }
+}
 
   return (
     <div className="app-grid-bg min-h-screen w-full">

@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from resvis.features.knowledge_base.router import router as knowledge_base_router
 
+from resvis.features.cnf.router import router as cnf_router
+
 app = FastAPI(title="ResViz API")
 
 # Allows the deployed frontend (and local dev) to actually call this
@@ -28,7 +30,7 @@ app.add_middleware(
 )
 
 app.include_router(knowledge_base_router)
-
+app.include_router(cnf_router)
 
 @app.get("/health")
 def health() -> dict[str, str]:
