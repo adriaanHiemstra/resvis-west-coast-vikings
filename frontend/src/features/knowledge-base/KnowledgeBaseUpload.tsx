@@ -1,8 +1,8 @@
 import { useRef } from "react";
 import { Download, Upload } from "lucide-react";
 import { Panel } from "@shared/components";
-import { insertAtCursor } from "@shared/lib/insertAtCursor";
 import { SymbolPalette } from "@features/proposition-input";
+import { LineByLineEditor, type LineByLineEditorHandle } from "./LineByLineEditor";
 
 interface KnowledgeBaseUploadProps {
   value: string;
@@ -17,7 +17,7 @@ export function KnowledgeBaseUpload({
   error,
   projectName,
 }: KnowledgeBaseUploadProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<LineByLineEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -94,27 +94,17 @@ export function KnowledgeBaseUpload({
         >
           Facts and clauses
         </label>
-        <textarea
-          id="knowledge-editor"
-          ref={textareaRef}
-          spellCheck={false}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="editor-area"
-          aria-describedby="knowledge-help"
-          aria-invalid={error ? true : undefined}
-        />
+        <LineByLineEditor ref={editorRef} value={value} onChange={onChange} />
         <p
           id="knowledge-help"
           className="mt-3 text-sm leading-relaxed text-muted"
         >
-          Write one clause per line. Use the symbols from the palette below to represent logical relationships.
+          Write one clause per line. Use the symbols from the palette below to
+          represent logical relationships.
         </p>
         <SymbolPalette
           ariaLabel="Logical symbol palette for knowledge base"
-          onInsert={(symbol) =>
-            insertAtCursor(textareaRef.current, value, symbol, onChange)
-          }
+          onInsert={(symbol) => editorRef.current?.insertSymbol(symbol)}
         />
         {error && (
           <div
