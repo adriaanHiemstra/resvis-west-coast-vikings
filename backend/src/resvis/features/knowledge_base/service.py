@@ -1,4 +1,4 @@
-"""Backlog 2 + 7: orchestrates one formula through the parser and turns
+"""Backlog 2 + 7: takes one formula through the parser and turns
 the outcome (success or failure) into a plain result the API can hand
 back. Kept separate from router.py on purpose: this file has zero
 knowledge of HTTP, so it stays testable and reusable on its own.

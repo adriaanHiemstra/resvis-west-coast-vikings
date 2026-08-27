@@ -28,16 +28,25 @@ class ParserAdapter:
 
         Raises `FormulaSyntaxError` if `text` doesn't lex or parse
         cleanly - this is the only place that translates the vendored
-        parser's own exception types (LexError, ParseError) into our
+        parser's own exception types (LexError, ParseError) into the
         app-wide error shape, so nothing else in the codebase needs to
         know those vendor types exist.
         """
+        
+        if not text.strip():
+            raise FormulaSyntaxError(
+                SyntaxErrorDetail(
+                    code="EMPTY_FORMULA",
+                    position=0,
+                    message="The formula you have entered is empty.")
+                )
+            
         try:
             root = _vendor_parser.parse(text)
         except LexError as exc:
             raise FormulaSyntaxError(
                 SyntaxErrorDetail(
-                    code="ILLEGAL_CHARACTER",
+                    code="ILLEGALCHARACTER",
                     position=exc.position,
                     message=str(exc),
                 )
