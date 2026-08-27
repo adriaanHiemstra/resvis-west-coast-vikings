@@ -27,6 +27,7 @@ export interface ParseFormulaResult {
   error: ParseError | null;
 }
 
+
 /**
  * Sends a list of formula strings to the backend and gets back one
  * result per formula, in the same order. A bad formula only affects
@@ -44,5 +45,46 @@ export async function parseFormulas(
     throw new Error(`Parse request failed: ${response.status}`);
   }
   const data = (await response.json()) as { results: ParseFormulaResult[] };
+  return data.results;
+}
+
+export interface ConvertFormulaResult {
+  formula: string;
+  negated: boolean;
+  success: boolean;
+  cnf: {
+    raw: string;
+    is_tautology: boolean;
+    clauses: {
+      raw: string;
+      literals: {
+        symbol: string;
+        negated: boolean;
+      }[];
+    }[];
+  } | null;
+  error: ParseError | null;
+}
+
+export async function convertFormulas(
+  formulas: string[],
+): Promise<ConvertFormulaResult[]> {
+  const response = await fetch(`${BASE_URL}/cnf/convert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      formulas,
+      negate: false,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`CNF conversion failed: ${response.status}`);
+  }
+
+  const data = (await response.json()) as {
+    results: ConvertFormulaResult[];
+  };
+
   return data.results;
 }
