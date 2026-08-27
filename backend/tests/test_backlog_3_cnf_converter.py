@@ -1,46 +1,14 @@
-""" CNF domain model tests."""
+"""Backlog 3, commit 3: normalization and batch behavior."""
 
 import pytest
 
-from resvis.features.cnf.models import Clause, CnfClauseSet, Literal
-from resvis.features.cnf.converter import CnfConverter
+from resvis.features.cnf.converter import CnfConversionError, CnfConverter
 from resvis.features.knowledge_base.parser.adapter import ParserAdapter
 
 
-def test_literal_formats_positive_and_negative_symbols():
-    assert Literal("Rain").raw == "Rain"
-    assert Literal("Rain", negated=True).raw == "¬Rain"
-
-
-def test_literal_complement_flips_polarity():
-    assert Literal("P").complement() == Literal("P", negated=True)
-
-
-def test_literal_rejects_an_empty_symbol():
-    with pytest.raises(ValueError):
-        Literal("")
-
-
-def test_clause_formats_a_disjunction():
-    clause = Clause((Literal("P", True), Literal("Q")))
-    assert clause.raw == "¬P ∨ Q"
-
-
-def test_cnf_clause_set_formats_a_conjunction_and_serializes():
-    cnf = CnfClauseSet(
-        (
-            Clause((Literal("P", True), Literal("Q"))),
-            Clause((Literal("R"),)),
-        )
-    )
-    assert cnf.raw == "(¬P ∨ Q) ∧ (R)"
-    assert cnf.to_dict()["clauses"][0]["raw"] == "¬P ∨ Q"
-
-""" parser-tree conversion tests."""
-
-def convert(formula: str):
+def convert(formula: str, *, negate: bool = False):
     root = ParserAdapter().parse_formula(formula).root
-    return CnfConverter().convert(root)
+    return CnfConverter().convert(root, negate=negate)
 
 
 def literals(cnf):
@@ -76,5 +44,45 @@ def literals(cnf):
         ),
     ],
 )
-def test_converts_supported_formula_shapes(formula, expected):
+def test_keeps_core_conversion_behavior(formula, expected):
     assert literals(convert(formula)) == expected
+
+
+def test_removes_duplicate_literals_and_clauses():
+    assert literals(convert("((P | P) & (P | P))")) == [[("P", False)]]
+
+
+def test_drops_a_tautological_clause():
+    cnf = convert("(P | ~P)")
+    assert cnf.clauses == ()
+    assert cnf.is_tautology is True
+    assert cnf.raw == "⊤"
+
+
+def test_can_negate_a_goal_for_resolution_by_refutation():
+    assert literals(convert("(P -> Q)", negate=True)) == [
+        [("P", False)],
+        [("Q", True)],
+    ]
+
+
+def test_convert_many_combines_formula_clause_sets():
+    parser = ParserAdapter()
+    roots = [
+        parser.parse_formula("(P -> Q)").root,
+        parser.parse_formula("P").root,
+    ]
+    assert literals(CnfConverter().convert_many(roots)) == [
+        [("P", True), ("Q", False)],
+        [("P", False)],
+    ]
+
+
+def test_invalid_tree_has_a_clear_conversion_error():
+    class BrokenNode:
+        label = "&"
+        left = None
+        right = None
+
+    with pytest.raises(CnfConversionError, match="two children"):
+        CnfConverter().convert(BrokenNode())

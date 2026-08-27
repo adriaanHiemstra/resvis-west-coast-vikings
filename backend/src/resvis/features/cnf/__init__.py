@@ -1,6 +1,13 @@
-"""Backlog 3: conversion of parsed formulas to CNF."""
+"""Backlog 3: normalized CNF conversion."""
 
-from resvis.features.cnf.converter import CnfConverter
+from resvis.features.cnf.converter import CnfConversionError, CnfConverter
 from resvis.features.cnf.models import Clause, ClauseSet, CnfClauseSet, Literal
 
-__all__ = ["Clause", "ClauseSet", "CnfClauseSet", "CnfConverter", "Literal"]
+__all__ = [
+    "Clause",
+    "ClauseSet",
+    "CnfClauseSet",
+    "CnfConversionError",
+    "CnfConverter",
+    "Literal",
+]
