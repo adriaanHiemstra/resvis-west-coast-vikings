@@ -1,4 +1,4 @@
-"""Backlog 3: normalized CNF conversion."""
+"""Backlog 3: conversion of parsed propositional formulas to CNF."""
 
 from resvis.features.cnf.converter import CnfConversionError, CnfConverter
 from resvis.features.cnf.models import Clause, ClauseSet, CnfClauseSet, Literal
