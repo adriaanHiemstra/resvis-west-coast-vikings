@@ -5,8 +5,8 @@ import { useLocalStorage } from "./useLocalStorage";
 const PROJECTS_KEY = "resviz-projects-v1";
 const SELECTED_KEY = "resviz-selected-project-v1";
 
-const DEFAULT_KNOWLEDGE_BASE = "¬Rain ∨ WetRoad\nRain";
-const DEFAULT_GOAL = "WetRoad";
+const DEFAULT_KNOWLEDGE_BASE = "(¬P ∨ Q)\nP";
+const DEFAULT_GOAL = "Q";
 
 function uid(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;

@@ -18,9 +18,6 @@ export function ProjectCard({ project, onOpen, onRename, onDuplicate, onDelete }
           <h2 className="m-0 text-lg font-bold text-ink">{project.name}</h2>
           <p className="mt-1 text-sm text-[#51635a]">Student: {project.studentName}</p>
         </div>
-        <span className="shrink-0 border border-[#a7bcae] bg-[#edf0e8] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#365448]">
-          {project.trace ? "Trace saved" : "Draft"}
-        </span>
       </div>
       <p className="mt-5 text-xs leading-relaxed text-muted">
         Last opened {formatDate(project.lastOpenedAt)} · Edited {formatDate(project.updatedAt)}
