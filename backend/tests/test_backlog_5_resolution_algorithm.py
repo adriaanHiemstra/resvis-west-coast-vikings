@@ -1,4 +1,4 @@
-"""Backlog 5, commit 2: domain models and the binary resolution rule."""
+"""Backlog 5, commit 3: models, binary resolution, and prioritisation."""
 
 from dataclasses import FrozenInstanceError
 
@@ -14,6 +14,7 @@ from resvis.features.resolution.models import (
     ResolutionStatus,
     ResolutionStep,
 )
+from resvis.features.resolution.prioritiser import ClausePrioritiser
 
 
 def test_clause_origin_values_are_stable_for_api_output():
@@ -42,6 +43,7 @@ def test_clause_record_reuses_and_serializes_the_cnf_clause_model():
         },
         "origin": "knowledge_base",
         "depth": 0,
+        "goal_distance": None,
     }
 
 
@@ -241,3 +243,169 @@ def test_resolvent_order_is_deterministic_and_inputs_are_not_modified():
 def test_resolve_pair_rejects_non_clause_inputs(left, right):
     with pytest.raises(TypeError, match="two Clause objects"):
         resolve_pair(left, right)
+
+
+def make_record(
+    clause_id,
+    literals,
+    *,
+    origin=ClauseOrigin.KNOWLEDGE_BASE,
+    depth=0,
+    goal_distance=None,
+):
+    return ClauseRecord(
+        clause_id=clause_id,
+        clause=Clause(tuple(literals)),
+        origin=origin,
+        depth=depth,
+        goal_distance=goal_distance,
+    )
+
+
+def test_negated_goal_is_automatically_marked_at_distance_zero():
+    record = make_record(
+        1,
+        [Literal("Goal", negated=True)],
+        origin=ClauseOrigin.NEGATED_GOAL,
+    )
+
+    assert record.goal_distance == 0
+    assert record.is_goal_connected is True
+    assert record.to_dict()["goal_distance"] == 0
+
+
+@pytest.mark.parametrize("distance", [-1, 1])
+def test_rejects_invalid_distances_for_goal_records(distance):
+    with pytest.raises(ValueError, match="goal_distance"):
+        make_record(
+            1,
+            [Literal("Goal", negated=True)],
+            origin=ClauseOrigin.NEGATED_GOAL,
+            goal_distance=distance,
+        )
+
+
+def test_prioritises_a_pair_connected_directly_to_the_negated_goal():
+    shared = make_record(1, [Literal("P"), Literal("Q")])
+    knowledge_base = make_record(2, [Literal("P", negated=True)])
+    negated_goal = make_record(
+        3,
+        [Literal("Q", negated=True)],
+        origin=ClauseOrigin.NEGATED_GOAL,
+    )
+    prioritiser = ClausePrioritiser((shared, knowledge_base, negated_goal))
+
+    first = prioritiser.pop_pair()
+    second = prioritiser.pop_pair()
+
+    assert tuple(record.clause_id for record in first) == (1, 3)
+    assert tuple(record.clause_id for record in second) == (1, 2)
+
+
+def test_prioritises_clauses_closer_to_the_goal():
+    distance_one = make_record(
+        1,
+        [Literal("P")],
+        origin=ClauseOrigin.DERIVED,
+        goal_distance=1,
+    )
+    complement_one = make_record(2, [Literal("P", negated=True)])
+    distance_two = make_record(
+        3,
+        [Literal("Q")],
+        origin=ClauseOrigin.DERIVED,
+        goal_distance=2,
+    )
+    complement_two = make_record(4, [Literal("Q", negated=True)])
+    prioritiser = ClausePrioritiser(
+        (distance_two, complement_two, distance_one, complement_one)
+    )
+
+    assert tuple(
+        record.clause_id for record in prioritiser.pop_pair()
+    ) == (1, 2)
+
+
+def test_prioritises_unit_and_shorter_clauses_at_the_same_goal_distance():
+    connected = make_record(
+        1,
+        [Literal("P"), Literal("Q")],
+        origin=ClauseOrigin.DERIVED,
+        goal_distance=1,
+    )
+    longer = make_record(
+        2,
+        [Literal("P", negated=True), Literal("R"), Literal("S")],
+    )
+    unit = make_record(3, [Literal("Q", negated=True)])
+    prioritiser = ClausePrioritiser((connected, longer, unit))
+
+    assert tuple(
+        record.clause_id for record in prioritiser.pop_pair()
+    ) == (1, 3)
+
+
+def test_adding_a_derived_clause_queues_new_goal_connected_work():
+    positive = make_record(1, [Literal("P")])
+    unrelated = make_record(2, [Literal("Q")])
+    prioritiser = ClausePrioritiser((positive, unrelated))
+    assert len(prioritiser) == 0
+
+    derived = make_record(
+        3,
+        [Literal("P", negated=True)],
+        origin=ClauseOrigin.DERIVED,
+        depth=1,
+        goal_distance=1,
+    )
+    prioritiser.add_clause(derived)
+
+    assert len(prioritiser) == 1
+    assert prioritiser.records == (positive, unrelated, derived)
+    assert tuple(
+        record.clause_id for record in prioritiser.pop_pair()
+    ) == (1, 3)
+
+
+def test_does_not_queue_unresolvable_or_tautology_only_pairs():
+    no_complement = ClausePrioritiser(
+        (
+            make_record(1, [Literal("P")]),
+            make_record(2, [Literal("Q")]),
+        )
+    )
+    tautology_only = ClausePrioritiser(
+        (
+            make_record(1, [Literal("P"), Literal("Q")]),
+            make_record(
+                2,
+                [Literal("P", negated=True), Literal("Q", negated=True)],
+            ),
+        )
+    )
+
+    assert len(no_complement) == 0
+    assert len(tautology_only) == 0
+
+
+def test_equal_priority_pairs_use_stable_clause_ids_as_tie_breakers():
+    shared = make_record(1, [Literal("P"), Literal("Q")])
+    not_p = make_record(2, [Literal("P", negated=True)])
+    not_q = make_record(3, [Literal("Q", negated=True)])
+    prioritiser = ClausePrioritiser((not_q, shared, not_p))
+
+    assert tuple(
+        record.clause_id for record in prioritiser.pop_pair()
+    ) == (1, 2)
+
+
+def test_prioritiser_rejects_duplicate_clause_ids():
+    prioritiser = ClausePrioritiser((make_record(1, [Literal("P")]),))
+
+    with pytest.raises(ValueError, match="already registered"):
+        prioritiser.add_clause(make_record(1, [Literal("Q")]))
+
+
+def test_empty_prioritiser_has_a_clear_error():
+    with pytest.raises(IndexError, match="No resolvable clause pairs"):
+        ClausePrioritiser().pop_pair()

@@ -38,6 +38,7 @@ class ClauseRecord:
     clause: Clause
     origin: ClauseOrigin
     depth: int = 0
+    goal_distance: int | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.clause_id, int) or isinstance(self.clause_id, bool):
@@ -52,6 +53,24 @@ class ClauseRecord:
             raise TypeError("ClauseRecord.depth must be an integer")
         if self.depth < 0:
             raise ValueError("ClauseRecord.depth cannot be negative")
+        if self.goal_distance is not None:
+            if not isinstance(self.goal_distance, int) or isinstance(
+                self.goal_distance,
+                bool,
+            ):
+                raise TypeError("ClauseRecord.goal_distance must be an integer or None")
+            if self.goal_distance < 0:
+                raise ValueError("ClauseRecord.goal_distance cannot be negative")
+
+        if self.origin is ClauseOrigin.NEGATED_GOAL:
+            if self.goal_distance is None:
+                object.__setattr__(self, "goal_distance", 0)
+            elif self.goal_distance != 0:
+                raise ValueError("The negated goal must have goal_distance 0")
+
+    @property
+    def is_goal_connected(self) -> bool:
+        return self.goal_distance is not None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -59,6 +78,7 @@ class ClauseRecord:
             "clause": self.clause.to_dict(),
             "origin": self.origin.value,
             "depth": self.depth,
+            "goal_distance": self.goal_distance,
         }
 
 

@@ -9,9 +9,11 @@ from resvis.features.resolution.models import (
     ResolutionStep,
 )
 from resvis.features.resolution.engine import resolve_pair
+from resvis.features.resolution.prioritiser import ClausePrioritiser
 
 __all__ = [
     "ClauseOrigin",
+    "ClausePrioritiser",
     "ClauseRecord",
     "ResolutionCandidate",
     "ResolutionResult",
