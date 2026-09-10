@@ -63,6 +63,31 @@ class ClauseRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class ResolutionCandidate:
+    """A resolvent produced from one complementary pivot."""
+
+    pivot: str
+    resolvent: Clause
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.pivot, str) or not self.pivot:
+            raise ValueError("ResolutionCandidate.pivot must be a non-empty symbol")
+        if not isinstance(self.resolvent, Clause):
+            raise TypeError("ResolutionCandidate.resolvent must be a Clause")
+
+    @property
+    def is_contradiction(self) -> bool:
+        return self.resolvent.is_empty
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "pivot": self.pivot,
+            "resolvent": self.resolvent.to_dict(),
+            "is_contradiction": self.is_contradiction,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ResolutionStep:
     """One successful application of the binary resolution rule."""
 
