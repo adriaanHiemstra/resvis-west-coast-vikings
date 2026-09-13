@@ -11,6 +11,8 @@ from resvis.features.knowledge_base.router import router as knowledge_base_route
 
 from resvis.features.cnf.router import router as cnf_router
 
+from resvis.features.resolution.router import router as resolution_router
+
 app = FastAPI(title="ResViz API")
 
 # Allows the deployed frontend (and local dev) to actually call this
@@ -31,6 +33,7 @@ app.add_middleware(
 
 app.include_router(knowledge_base_router)
 app.include_router(cnf_router)
+app.include_router(resolution_router)
 
 @app.get("/health")
 def health() -> dict[str, str]:
