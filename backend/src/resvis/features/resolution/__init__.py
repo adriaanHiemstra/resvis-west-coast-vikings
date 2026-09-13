@@ -8,7 +8,7 @@ from resvis.features.resolution.models import (
     ResolutionStatus,
     ResolutionStep,
 )
-from resvis.features.resolution.engine import resolve_pair
+from resvis.features.resolution.engine import ResolutionEngine, resolve_pair
 from resvis.features.resolution.prioritiser import ClausePrioritiser
 
 __all__ = [
@@ -16,6 +16,7 @@ __all__ = [
     "ClausePrioritiser",
     "ClauseRecord",
     "ResolutionCandidate",
+    "ResolutionEngine",
     "ResolutionResult",
     "ResolutionStatus",
     "ResolutionStep",

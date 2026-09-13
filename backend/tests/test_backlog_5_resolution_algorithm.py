@@ -1,11 +1,13 @@
-"""Backlog 5, commit 3: models, binary resolution, and prioritisation."""
+"""Backlog 5, commit 4: complete engine, service, and HTTP endpoint."""
 
 from dataclasses import FrozenInstanceError
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
-from resvis.features.cnf.models import Clause, Literal
-from resvis.features.resolution.engine import resolve_pair
+from resvis.features.cnf.models import Clause, CnfClauseSet, Literal
+from resvis.features.resolution.engine import ResolutionEngine, resolve_pair
 from resvis.features.resolution.models import (
     ClauseOrigin,
     ClauseRecord,
@@ -15,6 +17,8 @@ from resvis.features.resolution.models import (
     ResolutionStep,
 )
 from resvis.features.resolution.prioritiser import ClausePrioritiser
+from resvis.features.resolution.router import router
+from resvis.features.resolution.service import ResolutionService
 
 
 def test_clause_origin_values_are_stable_for_api_output():
@@ -409,3 +413,252 @@ def test_prioritiser_rejects_duplicate_clause_ids():
 def test_empty_prioritiser_has_a_clear_error():
     with pytest.raises(IndexError, match="No resolvable clause pairs"):
         ClausePrioritiser().pop_pair()
+
+
+def test_engine_proves_a_goal_and_records_the_priority_driven_trace():
+    knowledge_base = CnfClauseSet(
+        (
+            Clause((Literal("P", True), Literal("Q"))),
+            Clause((Literal("Q", True), Literal("R"))),
+            Clause((Literal("P"),)),
+        )
+    )
+    negated_goal = CnfClauseSet((Clause((Literal("R", True),)),))
+
+    result = ResolutionEngine().run(knowledge_base, negated_goal)
+
+    assert result.status is ResolutionStatus.ENTAILED
+    assert result.entailed is True
+    assert [step.pivot for step in result.steps] == ["R", "Q", "P"]
+    assert result.steps[-1].is_contradiction is True
+    assert result.clauses[-1].clause == Clause()
+
+
+def test_engine_reports_not_entailed_after_all_useful_pairs_are_exhausted():
+    result = ResolutionEngine().run(
+        CnfClauseSet((Clause((Literal("P"),)),)),
+        CnfClauseSet((Clause((Literal("Q", True),)),)),
+    )
+
+    assert result.status is ResolutionStatus.NOT_ENTAILED
+    assert result.entailed is False
+    assert result.completed is True
+    assert result.steps == ()
+
+
+def test_contradictory_knowledge_base_entails_any_goal():
+    result = ResolutionEngine().run(
+        CnfClauseSet(
+            (
+                Clause((Literal("P"),)),
+                Clause((Literal("P", True),)),
+            )
+        ),
+        CnfClauseSet((Clause((Literal("Unrelated", True),)),)),
+    )
+
+    assert result.entailed is True
+    assert result.steps[-1].resolvent.is_empty is True
+
+
+def test_initial_duplicate_clause_is_kept_once_and_marked_goal_connected():
+    shared = Clause((Literal("P"),))
+    result = ResolutionEngine().run(
+        CnfClauseSet((shared,)),
+        CnfClauseSet((shared,)),
+    )
+
+    assert len(result.clauses) == 1
+    assert result.clauses[0].origin is ClauseOrigin.NEGATED_GOAL
+    assert result.clauses[0].goal_distance == 0
+
+
+def test_clause_limit_stops_before_an_unbounded_derivation():
+    result = ResolutionEngine(max_clauses=2).run(
+        CnfClauseSet((Clause((Literal("P"), Literal("Q"))),)),
+        CnfClauseSet((Clause((Literal("P", True),)),)),
+    )
+
+    assert result.status is ResolutionStatus.LIMIT_REACHED
+    assert result.completed is False
+    assert "clause limit" in result.limit_reason.lower()
+
+
+def test_step_limit_returns_the_partial_trace():
+    knowledge_base = CnfClauseSet(
+        (
+            Clause((Literal("P", True), Literal("Q"))),
+            Clause((Literal("Q", True), Literal("R"))),
+            Clause((Literal("P"),)),
+        )
+    )
+    result = ResolutionEngine(max_steps=1).run(
+        knowledge_base,
+        CnfClauseSet((Clause((Literal("R", True),)),)),
+    )
+
+    assert result.status is ResolutionStatus.LIMIT_REACHED
+    assert len(result.steps) == 1
+    assert "step limit" in result.limit_reason.lower()
+
+
+@pytest.mark.parametrize(
+    ("argument", "value", "exception"),
+    [
+        ("max_steps", 0, ValueError),
+        ("max_clauses", True, TypeError),
+    ],
+)
+def test_engine_rejects_invalid_resource_limits(argument, value, exception):
+    with pytest.raises(exception):
+        ResolutionEngine(**{argument: value})
+
+
+def test_service_runs_parser_to_cnf_to_resolution_pipeline():
+    response = ResolutionService().run(["(P -> Q)", "P"], "Q")
+
+    assert response["success"] is True
+    assert response["knowledge_base_cnf"]["raw"] == "(¬P ∨ Q) ∧ (P)"
+    assert response["negated_goal_cnf"]["raw"] == "(¬Q)"
+    assert response["result"]["entailed"] is True
+    assert response["result"]["steps"][-1]["is_contradiction"] is True
+
+
+def test_service_returns_a_structured_formula_error_without_running():
+    response = ResolutionService().run(["P", "(P @ Q)"], "Q")
+
+    assert response["success"] is False
+    assert response["result"] is None
+    assert response["error"]["formula"] == "(P @ Q)"
+    assert response["error"]["position"] == 3
+
+
+def test_service_can_report_a_valid_non_entailment():
+    response = ResolutionService().run(["P"], "Q")
+
+    assert response["success"] is True
+    assert response["result"]["status"] == "not_entailed"
+    assert response["result"]["entailed"] is False
+
+
+def test_http_endpoint_returns_cnf_result_and_derivation_trace():
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+
+    response = client.post(
+        "/resolution/run",
+        json={
+            "knowledge_base": ["(P -> Q)", "P"],
+            "goal": "Q",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["result"]["status"] == "entailed"
+    assert body["result"]["steps"][-1]["resolvent"]["raw"] == "⊥"
+
+
+def test_http_endpoint_rejects_non_positive_limits():
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+
+    response = client.post(
+        "/resolution/run",
+        json={
+            "knowledge_base": ["P"],
+            "goal": "P",
+            "max_steps": 0,
+        },
+    )
+
+    assert response.status_code == 422
+
+"""Integration-level checks for the completed resolution workflow."""
+# Everything elow is integration testing
+
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from resvis.features.resolution.router import router
+from resvis.features.resolution.service import ResolutionService
+
+
+def make_client() -> TestClient:
+    app = FastAPI()
+    app.include_router(router)
+    return TestClient(app)
+
+
+def test_repeated_runs_produce_the_same_priority_order_and_trace():
+    service = ResolutionService()
+
+    first = service.run(["(P -> Q)", "(Q -> R)", "P"], "R")
+    second = service.run(["(P -> Q)", "(Q -> R)", "P"], "R")
+
+    assert first == second
+    assert [step["pivot"] for step in first["result"]["steps"]] == [
+        "R",
+        "Q",
+        "P",
+    ]
+
+
+def test_resolution_handles_a_goal_that_converts_to_multiple_cnf_clauses():
+    response = ResolutionService().run(["P"], "(P | Q)")
+
+    assert response["success"] is True
+    assert response["negated_goal_cnf"]["raw"] == "(¬P) ∧ (¬Q)"
+    assert response["result"]["status"] == "entailed"
+
+
+def test_empty_knowledge_base_returns_a_completed_non_entailment():
+    response = ResolutionService().run([], "P")
+
+    assert response["success"] is True
+    assert response["knowledge_base_cnf"]["clauses"] == []
+    assert response["result"]["status"] == "not_entailed"
+    assert response["result"]["completed"] is True
+
+
+def test_invalid_goal_returns_the_same_structured_error_contract_as_invalid_kb():
+    response = ResolutionService().run(["P"], "(Q @ R)")
+
+    assert response["success"] is False
+    assert response["result"] is None
+    assert response["error"]["formula"] == "(Q @ R)"
+    assert response["error"]["position"] == 3
+
+
+def test_http_contract_exposes_both_cnf_inputs_and_the_proof_trace():
+    response = make_client().post(
+        "/resolution/run",
+        json={"knowledge_base": ["(P -> Q)", "P"], "goal": "Q"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["knowledge_base_cnf"]["raw"] == "(¬P ∨ Q) ∧ (P)"
+    assert body["negated_goal_cnf"]["raw"] == "(¬Q)"
+    assert body["result"]["steps"][-1]["is_contradiction"] is True
+
+
+def test_http_contract_returns_a_partial_trace_when_a_limit_is_reached():
+    response = make_client().post(
+        "/resolution/run",
+        json={
+            "knowledge_base": ["(P -> Q)", "(Q -> R)", "P"],
+            "goal": "R",
+            "max_steps": 1,
+        },
+    )
+
+    assert response.status_code == 200
+    result = response.json()["result"]
+    assert result["status"] == "limit_reached"
+    assert result["completed"] is False
+    assert len(result["steps"]) == 1
+    assert result["limit_reason"]

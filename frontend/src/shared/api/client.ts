@@ -1,10 +1,6 @@
 // Thin HTTP client for our Python backend (Backlog 7 - Reusable API).
 //
-// Today this only wraps POST /knowledge-base/parse (parses
-// a formula into its syntax tree). CNF conversion  and the
-// resolution algorithm  aren't built on the backend yet, so
-// there's nothing to call for those - functions for them get added
-// here once they exist, following this same pattern.
+// Each function below owns one backend request and exposes its response type.
 
 import type { ParseError } from "./types";
 
@@ -87,4 +83,82 @@ export async function convertFormulas(
   };
 
   return data.results;
+}
+
+export interface ResolutionClause {
+  literals: {
+    symbol: string;
+    negated: boolean;
+  }[];
+  raw: string;
+}
+
+export interface ResolutionCnf {
+  clauses: ResolutionClause[];
+  raw: string;
+  is_tautology: boolean;
+}
+
+export interface ResolutionClauseRecord {
+  clause_id: number;
+  clause: ResolutionClause;
+  origin: "knowledge_base" | "negated_goal" | "derived";
+  depth: number;
+  goal_distance: number | null;
+}
+
+export interface ResolutionProofStep {
+  step_number: number;
+  left_clause_id: number;
+  right_clause_id: number;
+  pivot: string;
+  resolvent_clause_id: number;
+  resolvent: ResolutionClause;
+  is_contradiction: boolean;
+}
+
+export interface ResolutionResult {
+  status: "entailed" | "not_entailed" | "limit_reached";
+  entailed: boolean;
+  completed: boolean;
+  clauses: ResolutionClauseRecord[];
+  steps: ResolutionProofStep[];
+  limit_reason: string | null;
+}
+
+export interface RunResolutionResponse {
+  success: boolean;
+  knowledge_base_cnf: ResolutionCnf | null;
+  negated_goal_cnf: ResolutionCnf | null;
+  result: ResolutionResult | null;
+  error: (ParseError & { formula: string; position: number }) | null;
+}
+
+export interface RunResolutionOptions {
+  maxSteps?: number;
+  maxClauses?: number;
+}
+
+/** Runs parser -> CNF conversion -> priority-based resolution. */
+export async function runResolution(
+  knowledgeBase: string[],
+  goal: string,
+  options: RunResolutionOptions = {},
+): Promise<RunResolutionResponse> {
+  const response = await fetch(`${BASE_URL}/resolution/run`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      knowledge_base: knowledgeBase,
+      goal,
+      max_steps: options.maxSteps ?? 1_000,
+      max_clauses: options.maxClauses ?? 500,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Resolution request failed: ${response.status}`);
+  }
+
+  return (await response.json()) as RunResolutionResponse;
 }

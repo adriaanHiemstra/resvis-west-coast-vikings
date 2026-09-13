@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, FolderOpen, Network, PenLine, Plus, StickyNote } from "lucide-react";
 import type { Project, ProjectDraft } from "@shared/api/types";
-import { convertFormulas } from "@shared/api/client";
+import { runResolution } from "@shared/api/client";
 import { Logo, LogoMark, Button, Toast } from "@shared/components";
 import { formatDate } from "@shared/lib/format";
 import { useProjects, useToast } from "@shared/hooks";
@@ -82,40 +82,43 @@ export default function App() {
 async function handleRun() {
   if (!selectedProject) return;
 
-  const formulas = [
-    ...selectedProject.knowledgeBase
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean),
-    selectedProject.goal.trim(),
-  ].filter(Boolean);
+  const knowledgeBase = selectedProject.knowledgeBase
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const goal = selectedProject.goal.trim();
 
-  if (formulas.length === 0) {
-    showToast("Add a knowledge base clause or goal first.");
+  if (!goal) {
+    showToast("Add a goal before running resolution.");
     return;
   }
 
   setRunning(true);
 
   try {
-    const results = await convertFormulas(formulas);
+    const response = await runResolution(knowledgeBase, goal);
 
-    // just to check it works in browser
-    console.log("CNF conversion results:", results);
+    console.group("ResViz resolution run");
+    console.log("Knowledge base CNF:", response.knowledge_base_cnf?.raw);
+    console.log("Negated goal CNF:", response.negated_goal_cnf?.raw);
+    console.log("Resolution result:", response.result);
+    console.groupEnd();
 
-    // Displays the readable CNF output in the existing toast.
-    const summary = results
-      .map((result) =>
-        result.success
-          ? `${result.formula} → ${result.cnf?.raw}`
-          : `✗ ${result.formula}: ${result.error?.message}`,
-      )
-      .join(" · ");
+    if (!response.success || !response.result) {
+      showToast(response.error?.message ?? "Resolution could not be completed.");
+      return;
+    }
 
-    showToast(summary);
+    if (response.result.status === "entailed") {
+      showToast(`Goal proven in ${response.result.steps.length} resolution step(s).`);
+    } else if (response.result.status === "not_entailed") {
+      showToast("Goal was not proven: no further useful clauses could be derived.");
+    } else {
+      showToast(response.result.limit_reason ?? "Resolution stopped at the configured limit.");
+    }
   } catch (error) {
-    console.error("CNF conversion request failed:", error);
-    showToast("Could not reach the CNF converter — is the backend running?");
+    console.error("Resolution request failed:", error);
+    showToast("Could not reach the resolution endpoint — is the backend running?");
   } finally {
     setRunning(false);
   }
