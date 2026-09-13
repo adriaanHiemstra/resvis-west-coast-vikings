@@ -8,6 +8,7 @@ import { useProjects, useToast } from "@shared/hooks";
 import { ProjectCreate, ProjectLibrary } from "@features/project";
 import { KnowledgeBaseUpload, ClauseReview } from "@features/knowledge-base";
 import { PropositionEditor } from "@features/proposition-input";
+import { ResolutionTrace } from "@features/resolution-viewer";
 
 type ViewName = "home" | "projects" | "workspace";
 
@@ -27,6 +28,8 @@ export default function App() {
     deleteProject,
     openProject,
     updateProject,
+    setTraceIndex,
+    setTrace,
     upsertAnnotation,
     removeAnnotation,
   } = useProjects();
@@ -249,6 +252,11 @@ async function handleRun() {
                   annotations={selectedProject.annotations}
                   onSave={(symbol, meaning) => upsertAnnotation(selectedProject.id, symbol, meaning)}
                   onRemove={(annotationId) => removeAnnotation(selectedProject.id, annotationId)}
+                />
+                <ResolutionTrace
+                  trace={selectedProject.trace}
+                  traceIndex={selectedProject.traceIndex}
+                  onTraceIndexChange={(index) => setTraceIndex(selectedProject.id, index)}
                 />
               </aside>
             </div>
