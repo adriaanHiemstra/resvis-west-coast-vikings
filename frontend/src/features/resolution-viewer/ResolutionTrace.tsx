@@ -4,6 +4,7 @@ import { GitBranch, List, Maximize2, Minimize2, Network, Route } from "lucide-re
 import type { DerivationTrace } from "@shared/api/types";
 import { verdictLabel, verdictTone } from "@features/ux-theme";
 import { StepListView } from "./StepListView";
+import { StepTreeView } from "./StepTreeView";
 
 interface ResolutionTraceProps {
   trace: DerivationTrace | null;
@@ -105,7 +106,7 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
             {view === "list" ? (
             <StepListView steps={trace.steps} currentIndex={traceIndex} />
           ) : (
-            <StepListView steps={trace.steps} currentIndex={traceIndex} />
+            <StepTreeView steps={trace.steps} currentIndex={traceIndex} />
           )}
         </div>
       )}
