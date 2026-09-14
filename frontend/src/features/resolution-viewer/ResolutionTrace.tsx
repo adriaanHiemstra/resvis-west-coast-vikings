@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { GitBranch, List, Maximize2, Minimize2, Network, Route } from "lucide-react";
 import type { DerivationTrace } from "@shared/api/types";
 import { verdictLabel, verdictTone } from "@features/ux-theme";
+import { StepListView } from "./StepListView";
 
 interface ResolutionTraceProps {
   trace: DerivationTrace | null;
@@ -101,8 +102,11 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
                 `The step limit (${trace.stepLimit}) was reached before a definitive answer — try a smaller knowledge base or a simpler goal.`}
             </p>
           </div>
-
- 
+            {view === "list" ? (
+            <StepListView steps={trace.steps} currentIndex={traceIndex} />
+          ) : (
+            <StepListView steps={trace.steps} currentIndex={traceIndex} />
+          )}
         </div>
       )}
     </section>

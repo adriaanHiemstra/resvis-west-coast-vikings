@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, FolderOpen, Network, PenLine, Plus, StickyNote } from "lucide-react";
 import type { Project, ProjectDraft } from "@shared/api/types";
-import { runResolution } from "@shared/api/client";
+import { runResolution, toDerivationTrace } from "@shared/api/client";
 import { Logo, LogoMark, Button, Toast } from "@shared/components";
 import { formatDate } from "@shared/lib/format";
 import { useProjects, useToast } from "@shared/hooks";
@@ -9,6 +9,8 @@ import { ProjectCreate, ProjectLibrary } from "@features/project";
 import { KnowledgeBaseUpload, ClauseReview } from "@features/knowledge-base";
 import { PropositionEditor } from "@features/proposition-input";
 import { ResolutionTrace } from "@features/resolution-viewer";
+
+const MAX_RESOLUTION_STEPS = 1_000;
 
 type ViewName = "home" | "projects" | "workspace";
 
@@ -111,6 +113,8 @@ async function handleRun() {
       showToast(response.error?.message ?? "Resolution could not be completed.");
       return;
     }
+
+    setTrace(selectedProject.id, toDerivationTrace(response, MAX_RESOLUTION_STEPS));
 
     if (response.result.status === "entailed") {
       showToast(`Goal proven in ${response.result.steps.length} resolution step(s).`);
