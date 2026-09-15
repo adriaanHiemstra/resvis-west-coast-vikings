@@ -24,7 +24,6 @@ export interface ParseFormulaResult {
   error: ParseError | null;
 }
 
-
 /**
  * Sends a list of formula strings to the backend and gets back one
  * result per formula, in the same order. A bad formula only affects
@@ -116,6 +115,7 @@ export interface ResolutionProofStep {
   resolvent_clause_id: number;
   resolvent: ResolutionClause;
   is_contradiction: boolean;
+  explanation: string;
 }
 
 export interface ResolutionResult {
@@ -125,6 +125,7 @@ export interface ResolutionResult {
   clauses: ResolutionClauseRecord[];
   steps: ResolutionProofStep[];
   limit_reason: string | null;
+  transcript: string[];
 }
 
 export interface RunResolutionResponse {
