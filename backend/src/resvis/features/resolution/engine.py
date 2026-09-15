@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from resvis.features.cnf.models import Clause, CnfClauseSet, Literal
+from resvis.features.resolution.explain import explain_step
 from resvis.features.resolution.models import (
     ClauseOrigin,
     ClauseRecord,
@@ -151,6 +152,7 @@ class ResolutionEngine:
                     pivot=candidate.pivot,
                     resolvent_clause_id=derived.clause_id,
                     resolvent=derived.clause,
+                    explanation=explain_step(left, right, candidate),
                 )
 
                 records.append(derived)

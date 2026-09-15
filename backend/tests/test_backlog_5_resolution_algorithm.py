@@ -494,6 +494,26 @@ def test_engine_proves_a_goal_and_records_the_priority_driven_trace():
     assert result.clauses[-1].clause == Clause()
 
 
+def test_engine_wires_the_explanation_into_each_step():
+    knowledge_base = CnfClauseSet(
+        (
+            Clause((Literal("P", True), Literal("Q"))),
+            Clause((Literal("Q", True), Literal("R"))),
+            Clause((Literal("P"),)),
+        )
+    )
+    negated_goal = CnfClauseSet((Clause((Literal("R", True),)),))
+
+    result = ResolutionEngine().run(knowledge_base, negated_goal)
+
+    first_step = result.steps[0]
+    assert str(first_step.left_clause_id) in first_step.explanation
+    assert str(first_step.right_clause_id) in first_step.explanation
+
+    last_step = result.steps[-1]
+    assert last_step.explanation.endswith("a contradiction (⊥).")
+
+
 def test_engine_reports_not_entailed_after_all_useful_pairs_are_exhausted():
     result = ResolutionEngine().run(
         CnfClauseSet((Clause((Literal("P"),)),)),
