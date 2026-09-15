@@ -2,7 +2,8 @@
 //
 // Each function below owns one backend request and exposes its response type.
 
-import type { ParseError } from "./types";
+import type { Clause, DerivationTrace, ParseError, ResolutionStep, Verdict } from "./types";
+
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -161,4 +162,71 @@ export async function runResolution(
   }
 
   return (await response.json()) as RunResolutionResponse;
+}
+
+/**
+ * Helper function for toDerivationTrace
+ * Maps a clause record onto the a 'Clause' defined in types.ts. The backend doesn't
+ * echo back which KB line a clause came from, so "kb" clauses are numbered
+ * by the order they appear in 'result.clauses' (input order) as a stand-in
+ * for a real line number, and "derived" clauses look up their producing
+ * step number from 'stepByResolventId'.
+ */
+function toClause(record: ResolutionClauseRecord, kbLine: number, stepByResolventId: Map<number, number>): Clause {
+  const source: Clause["source"] =
+    record.origin === "negated_goal"
+      ? { kind: "goal" }
+      : record.origin === "derived"
+        ? { kind: "derived", step: stepByResolventId.get(record.clause_id) ?? 0 }
+        : { kind: "kb", line: kbLine };
+
+  return {
+    id: String(record.clause_id),
+    literals: record.clause.literals,
+    raw: record.clause.raw,
+    goalRelated: record.goal_distance !== null,
+    source,
+  };
+}
+
+/** Backend to frontend reconciliation. Converts a backend '/resolution/run' response into the 'DerivationTrace' shape the trace viewer renders. */
+export function toDerivationTrace(response: RunResolutionResponse, stepLimit: number): DerivationTrace | null {
+  const result = response.result;
+  if (!result) return null;
+
+  const stepByResolventId = new Map(result.steps.map((step) => [step.resolvent_clause_id, step.step_number]));
+
+  let kbLine = 0;
+  const clauseById = new Map<number, Clause>();
+  for (const record of result.clauses) {
+    clauseById.set(record.clause_id, toClause(record, record.origin === "knowledge_base" ? kbLine++ : -1, stepByResolventId));
+  }
+
+  const getClause = (id: number): Clause => {
+    const clause = clauseById.get(id);
+    if (!clause) throw new Error(`Resolution response referenced unknown clause id ${id}`);
+    return clause;
+  };
+
+  const steps: ResolutionStep[] = result.steps.map((step) => ({
+    index: step.step_number,
+    parents: [getClause(step.left_clause_id), getClause(step.right_clause_id)],
+    resolvent: step.is_contradiction ? null : getClause(step.resolvent_clause_id),
+    resolvedOn: step.pivot,
+    isEmptyClause: step.is_contradiction,
+  }));
+
+  const kbClauses = result.clauses.filter((record) => record.origin === "knowledge_base").map((record) => getClause(record.clause_id));
+  const goalRecord = result.clauses.find((record) => record.origin === "negated_goal");
+
+  const verdict: Verdict = result.status === "entailed" ? true : result.status === "not_entailed" ? false : null;
+
+  return {
+    verdict,
+    steps,
+    stepLimit,
+    stepLimitReached: result.status === "limit_reached",
+    kbClauses,
+    goalClause: goalRecord ? getClause(goalRecord.clause_id) : null,
+  };
 }
