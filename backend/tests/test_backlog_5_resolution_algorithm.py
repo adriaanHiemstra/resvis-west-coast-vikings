@@ -100,6 +100,29 @@ def test_resolution_step_records_parents_pivot_and_resolvent():
     assert step.to_dict()["resolvent"]["raw"] == "Q"
 
 
+def test_resolution_step_explanation_defaults_to_empty_and_serializes():
+    default_step = ResolutionStep(
+        step_number=1,
+        left_clause_id=1,
+        right_clause_id=2,
+        pivot="P",
+        resolvent_clause_id=3,
+        resolvent=Clause((Literal("Q"),)),
+    )
+    assert default_step.explanation == ""
+
+    explained_step = ResolutionStep(
+        step_number=1,
+        left_clause_id=1,
+        right_clause_id=2,
+        pivot="P",
+        resolvent_clause_id=3,
+        resolvent=Clause((Literal("Q"),)),
+        explanation="Clause 1 (P) and Clause 2 (¬P) share P with opposite signs, so it cancels out, leaving Q.",
+    )
+    assert explained_step.to_dict()["explanation"] == explained_step.explanation
+
+
 def test_empty_resolvent_marks_a_contradiction():
     step = ResolutionStep(
         step_number=2,

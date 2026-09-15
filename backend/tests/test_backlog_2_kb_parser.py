@@ -77,7 +77,7 @@ def test_illegal_character_raises_formula_syntax_error_with_position():
     with pytest.raises(FormulaSyntaxError) as exc_info:
         ParserAdapter().parse_formula("(P @ Q)")
     detail = exc_info.value.detail
-    assert detail.code == "ILLEGALCHARACTER"
+    assert detail.code == "ILLEGAL_CHARACTER"
     assert detail.position == 3  # index of '@' in "(P @ Q)"
 
 
@@ -114,7 +114,7 @@ def test_service_parse_formula_reports_failure_instead_of_raising():
     result = KnowledgeBaseService().parse_formula("(P @ Q)")
     assert result["success"] is False
     assert result["tree"] is None
-    assert result["error"]["code"] == "ILLEGALCHARACTER"
+    assert result["error"]["code"] == "ILLEGAL_CHARACTER"
 
 
 def test_service_parse_formulas_preserves_request_order():

@@ -4,8 +4,7 @@ created by different teams." Test cases: "Connect front end to backend
 and see if results... are displayed correctly and timely... Test API on
 another team's frontend to see if it is reusable."
 
-These tests go through the real HTTP layer (FastAPI's TestClient - an
-in-memory fake client, no actual network needed) rather than calling
+These tests go through the real HTTP layer rather than calling
 Python functions directly, so they're checking the same contract any
 frontend - ours or another team's - would actually be talking to.
 """
@@ -34,7 +33,7 @@ def test_parse_endpoint_reports_mixed_success_and_failure_independently(client):
     assert response.status_code == 200
     results = response.json()["results"]
     assert [r["success"] for r in results] == [True, False, False]
-    assert results[1]["error"]["code"] == "ILLEGALCHARACTER"
+    assert results[1]["error"]["code"] == "ILLEGAL_CHARACTER"
     assert results[2]["error"]["code"] == "UNEXPECTED_END"
 
 
