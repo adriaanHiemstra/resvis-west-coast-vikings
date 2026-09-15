@@ -215,6 +215,7 @@ export function toDerivationTrace(response: RunResolutionResponse, stepLimit: nu
     resolvent: step.is_contradiction ? null : getClause(step.resolvent_clause_id),
     resolvedOn: step.pivot,
     isEmptyClause: step.is_contradiction,
+    explanation: step.explanation,
   }));
 
   const kbClauses = result.clauses.filter((record) => record.origin === "knowledge_base").map((record) => getClause(record.clause_id));
@@ -229,5 +230,6 @@ export function toDerivationTrace(response: RunResolutionResponse, stepLimit: nu
     stepLimitReached: result.status === "limit_reached",
     kbClauses,
     goalClause: goalRecord ? getClause(goalRecord.clause_id) : null,
+    transcript: result.transcript,
   };
 }
