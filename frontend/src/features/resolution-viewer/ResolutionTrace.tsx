@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { FileText, GitBranch, List, Maximize2, Minimize2, Network, Route } from "lucide-react";
+import { FileText, GitBranch, List, Maximize2, Minimize2, Network, Route, Workflow } from "lucide-react";
 import type { DerivationTrace } from "@shared/api/types";
 import { verdictLabel, verdictTone } from "@features/ux-theme";
 import { StepListView } from "./StepListView";
 import { StepTreeView } from "./StepTreeView";
 import { TranscriptView } from "./TranscriptView";
+import { FullTreeView } from "./FullTreeView";
 import { DebuggerControls } from "./DebuggerControls";
 
 interface ResolutionTraceProps {
@@ -22,7 +23,7 @@ const TONE_BANNER: Record<"success" | "danger" | "muted", string> = {
 
 export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: ResolutionTraceProps) {
   const [fullscreen, setFullscreen] = useState(false);
-  const [view, setView] = useState<"list" | "tree" | "transcript">("list");
+  const [view, setView] = useState<"list" | "tree" | "fullTree" | "transcript">("list");
 
   const hasTrace = trace !== null && trace.steps.length > 0;
   const total = trace?.steps.length ?? 0;
@@ -64,6 +65,15 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
                   aria-label="Show tree view"
                 >
                   <GitBranch size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("fullTree")}
+                  aria-pressed={view === "fullTree"}
+                  className={`grid h-9 w-9 place-items-center transition-colors ${view === "fullTree" ? "bg-lime text-forest" : "text-lime hover:bg-[#286451]"}`}
+                  aria-label="Show full tree"
+                >
+                  <Workflow size={16} />
                 </button>
                 <button
                   type="button"
@@ -128,6 +138,8 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
             <StepListView steps={trace.steps} currentIndex={traceIndex} />
           ) : view === "tree" ? (
             <StepTreeView steps={trace.steps} currentIndex={traceIndex} />
+          ) : view === "fullTree" ? (
+            <FullTreeView trace={trace} currentIndex={traceIndex} />
           ) : (
             <TranscriptView transcript={trace.transcript} />
           )}
