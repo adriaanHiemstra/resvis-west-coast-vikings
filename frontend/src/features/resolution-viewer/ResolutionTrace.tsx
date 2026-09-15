@@ -5,6 +5,7 @@ import type { DerivationTrace } from "@shared/api/types";
 import { verdictLabel, verdictTone } from "@features/ux-theme";
 import { StepListView } from "./StepListView";
 import { StepTreeView } from "./StepTreeView";
+import { DebuggerControls } from "./DebuggerControls";
 
 interface ResolutionTraceProps {
   trace: DerivationTrace | null;
@@ -23,6 +24,7 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
   const [view, setView] = useState<"list" | "tree">("list");
 
   const hasTrace = trace !== null && trace.steps.length > 0;
+  const total = trace?.steps.length ?? 0;
 
   const panel = (
     <section
@@ -103,6 +105,14 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
                 `The step limit (${trace.stepLimit}) was reached before a definitive answer — try a smaller knowledge base or a simpler goal.`}
             </p>
           </div>
+            <DebuggerControls
+             index={traceIndex}
+             total={total}
+             onPrev={() => onTraceIndexChange(Math.max(0, traceIndex - 1))}
+             onNext={() => onTraceIndexChange(Math.min(total - 1, traceIndex + 1))}
+            />
+
+
             {view === "list" ? (
             <StepListView steps={trace.steps} currentIndex={traceIndex} />
           ) : (
