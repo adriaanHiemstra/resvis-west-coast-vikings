@@ -524,6 +524,8 @@ def test_engine_reports_not_entailed_after_all_useful_pairs_are_exhausted():
     assert result.entailed is False
     assert result.completed is True
     assert result.steps == ()
+    assert result.transcript[-1].startswith("Verdict:")
+
 
 
 def test_contradictory_knowledge_base_entails_any_goal():
@@ -579,6 +581,8 @@ def test_step_limit_returns_the_partial_trace():
 
     assert result.status is ResolutionStatus.LIMIT_REACHED
     assert len(result.steps) == 1
+    assert len(result.transcript) == len(result.steps) + 1
+
     assert "step limit" in result.limit_reason.lower()
 
 
@@ -781,3 +785,18 @@ def test_build_transcript_ends_with_the_correct_verdict_line(
     assert transcript[0] == "Step 1: " + step.explanation
     assert transcript[-1] == expected_verdict
     assert len(transcript) == 2
+
+def test_engine_populates_the_full_transcript_when_entailed():
+    knowledge_base = CnfClauseSet(
+        (
+            Clause((Literal("P", True), Literal("Q"))),
+            Clause((Literal("Q", True), Literal("R"))),
+            Clause((Literal("P"),)),
+        )
+    )
+    negated_goal = CnfClauseSet((Clause((Literal("R", True),)),))
+
+    result = ResolutionEngine().run(knowledge_base, negated_goal)
+
+    assert len(result.transcript) == len(result.steps) + 1
+    assert result.transcript[-1].startswith("Verdict:")
