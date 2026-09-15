@@ -24,7 +24,6 @@ export interface ParseFormulaResult {
   error: ParseError | null;
 }
 
-
 /**
  * Sends a list of formula strings to the backend and gets back one
  * result per formula, in the same order. A bad formula only affects
@@ -116,6 +115,7 @@ export interface ResolutionProofStep {
   resolvent_clause_id: number;
   resolvent: ResolutionClause;
   is_contradiction: boolean;
+  explanation: string;
 }
 
 export interface ResolutionResult {
@@ -125,6 +125,7 @@ export interface ResolutionResult {
   clauses: ResolutionClauseRecord[];
   steps: ResolutionProofStep[];
   limit_reason: string | null;
+  transcript: string[];
 }
 
 export interface RunResolutionResponse {
@@ -214,6 +215,7 @@ export function toDerivationTrace(response: RunResolutionResponse, stepLimit: nu
     resolvent: step.is_contradiction ? null : getClause(step.resolvent_clause_id),
     resolvedOn: step.pivot,
     isEmptyClause: step.is_contradiction,
+    explanation: step.explanation,
   }));
 
   const kbClauses = result.clauses.filter((record) => record.origin === "knowledge_base").map((record) => getClause(record.clause_id));
@@ -228,5 +230,6 @@ export function toDerivationTrace(response: RunResolutionResponse, stepLimit: nu
     stepLimitReached: result.status === "limit_reached",
     kbClauses,
     goalClause: goalRecord ? getClause(goalRecord.clause_id) : null,
+    transcript: result.transcript,
   };
 }

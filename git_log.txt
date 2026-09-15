@@ -1,0 +1,403 @@
+commit a3df022cb66bd75140ff4023e5adade9cea311cb
+Author: Suhayl Khoodoruth <KHDSUH001@myuct.ac.za>
+Date:   Sun Aug 30 15:59:44 2026 +0200
+
+    Removed/updated some UI placeholders
+
+commit 8e41147c1886919a5b069e1adf79db191ae4c3dc
+Merge: a2bd264 f671fa3
+Author: Muhammed Isaa Deshmukh <dshmuh001@cs.uct.ac.za>
+Date:   Thu Aug 27 20:14:47 2026 +0200
+
+    Merge branch 'feature/cnf-converter' into 'main'
+    
+    Feature/cnf converter
+    
+    See merge request hmsadr001/resvis-west-coast-vikings!2
+
+commit f671fa32aca5128716d2f48181e7e6a3f2ee72c2
+Author: Isa <DSHMUH001@myuct.ac.za>
+Date:   Thu Aug 27 19:52:59 2026 +0200
+
+    added functionality of cnf conversion to button on frontend
+
+commit 3327a2479fd574143591bf47ed45c8bdf8b30263
+Author: Isa <DSHMUH001@myuct.ac.za>
+Date:   Thu Aug 27 18:23:43 2026 +0200
+
+    wire CNF router into FastAPI app
+
+commit 285cf96372582f912c73caba59369963868084ea
+Author: Isa <DSHMUH001@myuct.ac.za>
+Date:   Thu Aug 27 18:12:16 2026 +0200
+
+    expose reusable CNF conversion endpoint and verify conversion against parser sample truth tables
+
+commit 3191d0480aec2a71f74299bd1a47ee5bf76e7ff9
+Author: Isa <DSHMUH001@myuct.ac.za>
+Date:   Thu Aug 27 15:32:39 2026 +0200
+
+    normalize clauses and support batch conversion
+
+commit a2bd2640fc1599217d3da17c4fa480059897650d
+Merge: 4a2c30f 4d945df
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 14:37:10 2026 +0200
+
+    Merge feature/kb-line-validation: live per-line KB syntax validation + symbol palette fix
+
+commit 4d945dfe7605584091aaa14cab9746a879987d94
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 14:35:39 2026 +0200
+
+    Fix stale ILLEGAL_CHARACTER test expectation to match adapter's ILLEGALCHARACTER code
+    
+    Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+
+commit d1e02fbb71c6d5e1884a28960b1c42fc4e52952e
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 14:11:43 2026 +0200
+
+    finished implementation of highlighting on enter
+
+commit d8223b6c5c0e559c42233bf8265b2d5d503d09b9
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 13:57:38 2026 +0200
+
+    added functionality so that parse formulas fires on press enter
+
+commit 4db3565a55a9ee72879fc9e154dedc8eb30c1d94
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 13:50:07 2026 +0200
+
+    Fix Enter key dropping text that was to the right of the cursor
+    
+    handleLineKeyDown always inserted a blank line after the current
+    line's full, unsplit text, ignoring cursor position entirely - text
+    past the cursor just stayed put instead of moving to the new line.
+    Now reads event.currentTarget.selectionStart and splits the current
+    line's text there, matching normal textarea behavior. Also
+    explicitly resets the new line's cursor to position 0 after
+    focusing it, since focusing a populated input defaults to placing
+    the cursor at the end.
+    
+    Verified via a directly-dispatched Enter keydown with cursor forced
+    to a mid-line position: the text before the cursor stayed on the
+    original line, the text after it correctly became a new line, and
+    an unrelated third line was left untouched.
+
+commit f3288a86dcd33eb41545c6e6745844e558f0ee03
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 13:33:09 2026 +0200
+
+    added a line by line editor file into the frontend knowledge base folder. This bypasses the limitation of not allowing the knowledge base to be highlighted on each new line as you can't do that on a regular text editor.
+
+commit 4a2c30f684136caede17051ee2ce1009e4e4c003
+Merge: 3c8abdb cd8771e
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 12:44:35 2026 +0200
+
+    Merge feaetures/parser-refinements: parser improvements (empty formula, max length, friendlier parens error) + tests
+
+commit cd8771e94f30307d3a76b382c8817ceefeec6101
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 12:34:00 2026 +0200
+
+    adding a friendlier message for when the user forgets to add parenthesis
+
+commit 171f9717035436557ebb037f43041b017dc34a27
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 12:03:42 2026 +0200
+
+    implemented max character check as well as whitespace check, all unit tests passed
+
+commit 3c8abdbc4ed91742f364c78c9e6966d4aaf9c6bf
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 27 11:28:27 2026 +0200
+
+    added an if not check at the start of parse_formula to verify whether or not the formula parsed is empty or not
+
+commit 8f80a5493d79d5b2f21bf928ea8e3bb42edc3c10
+Author: Isa <DSHMUH001@myuct.ac.za>
+Date:   Thu Aug 27 02:16:06 2026 +0200
+
+    convert parser trees to conjunctive normal form
+
+commit bfdd702f0da94e29f8e480031d49b88bf8e5e24b
+Author: Isa <DSHMUH001@myuct.ac.za>
+Date:   Thu Aug 27 01:03:52 2026 +0200
+
+    add clause and literal domain models
+
+commit 2071393fe7edc64614430f18840dde7973480086
+Merge: 090ef5b cb60744
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Mon Aug 24 06:59:40 2026 +0200
+
+    Merge branch 'main' of gitlab.cs.uct.ac.za:hmsadr001/resvis-west-coast-vikings
+    
+    # Conflicts:
+    #       frontend/src/features/knowledge-base/KnowledgeBaseUpload.tsx
+
+commit 090ef5b6a86bea9132b416640efc9c27edd6e19a
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Mon Aug 24 06:46:55 2026 +0200
+
+    Wiring up real run resolution and adding multi-letter/unicode lexer fix
+    
+    Frontend: client.ts calls the real /knowledge-base/parse endpoint;
+    App.tsx's handleRun now sends the knowledge base + goal to the backend
+    and shows real parsed results in the toast, with a running state so
+    the button gives feedback while waiting (Render's free tier can take
+    up to ~50s to wake from sleep). Corrected the knowledge-base help text,
+    which previously claimed syntax (commas, "OR", "!") that never actually
+    worked.
+    
+    Backend: lexer now accepts whole words (Rain, WetRoad) instead of only
+    single letters, and accepts the frontend's unicode symbols (¬ ∧ ∨ → ↔)
+    alongside the existing ASCII forms (~ & | -> <->), normalizing either
+    form to the same canonical label so nothing downstream has to handle
+    two spellings of the same operator. 2 new tests added (20 passing).
+    
+    Verified: full backend suite passing, frontend build succeeds, and
+    manually clicked through the real app end-to-end against a local
+    backend before pushing.
+
+commit cb60744036e11eeb5ce5c4509bf2d2d25cde5e12
+Author: Suhayl Khoodoruth <KHDSUH001@myuct.ac.za>
+Date:   Thu Aug 20 16:45:03 2026 +0200
+
+    UI improvements
+
+commit 2c434ae283a7cb1b4534653e994caa61b619fe95
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Thu Aug 20 15:44:03 2026 +0200
+
+    Fix frontend build: invalid ignoreDeprecations value
+    
+    tsconfig.json had "ignoreDeprecations": "6.0", which isn't a real
+    TypeScript version (installed version is 5.9.3) - this crashed
+    `tsc -b` immediately with TS5103 before any real compilation
+    happened. Removed it; nothing actually depended on it. Verified
+    locally: npm run build succeeds, and manually clicked through
+    project creation in the running app with no console errors.
+
+commit 5662c8b9a82fa9bc6fe7b940b0233eb4549be14f
+Merge: 982227a 28e80f6
+Author: Suhayl Khoodoruth <khdsuh001@cs.uct.ac.za>
+Date:   Thu Aug 20 15:39:24 2026 +0200
+
+    Merge branch 'Suhayl' into 'main'
+    
+    Merge UI to main
+    
+    See merge request hmsadr001/resvis-west-coast-vikings!1
+
+commit 28e80f61dfc2309038d66b190691963ce140349a
+Author: Suhayl Khoodoruth <KHDSUH001@myuct.ac.za>
+Date:   Wed Aug 19 21:49:39 2026 +0200
+
+    Added resolution screen, knowledge base input/import/export and goal input with symbol palette. Also added clause annotations attached to symbols.
+
+commit 0d1523d1cc837a04443d82e9cc49f8321d50e1e2
+Author: Suhayl Khoodoruth <KHDSUH001@myuct.ac.za>
+Date:   Wed Aug 19 18:31:26 2026 +0200
+
+    Implemented Home and Project Library screens
+
+commit 5e1db882d461c608e075bd4c41873537b83ee2cd
+Author: Suhayl Khoodoruth <KHDSUH001@myuct.ac.za>
+Date:   Wed Aug 19 17:08:37 2026 +0200
+
+    Added local storage project state hooks
+
+commit 4a98f97febdff02a5931e0ce2c232329e7462135
+Author: Suhayl Khoodoruth <KHDSUH001@myuct.ac.za>
+Date:   Tue Aug 18 18:38:45 2026 +0200
+
+    Added domain types and shared UI components
+
+commit cdcaa154e939048882bca1a7712392bd37eec215
+Author: Suhayl Khoodoruth <KHDSUH001@myuct.ac.za>
+Date:   Tue Aug 18 15:41:49 2026 +0200
+
+    Set up Tailwind CSS build pipeline
+
+commit 982227a9db84a8253e6379b7b29e180cbea56aaa
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 13:30:57 2026 +0200
+
+    Fix CORS: match Vercel's stable domain, not a one-off deploy URL
+    
+    The origin configured earlier was a per-deployment URL that changes
+    every build - CORS was silently broken against the actual stable
+    production domain. Switched to a regex matching any
+    *.vercel.app subdomain under our project name (stable domain,
+    git-branch previews, and per-deployment URLs alike), verified against
+    all four real domain variants plus a rejected arbitrary origin before
+    pushing.
+
+commit e3ba571d49483b4bd471fc3b25640b6a379943e3
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 13:27:07 2026 +0200
+
+    Allow the deployed Vercel frontend to call the API (CORS)
+    
+    Without this, a browser on the Vercel domain would silently block
+    every request to this API before it even reached our routes.
+    Verified locally with curl preflight requests: the Vercel origin gets
+    access-control-allow-origin back, an arbitrary origin gets rejected.
+
+commit 208d34e74a2bf84cfb72627c5006315447e79091
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 13:25:54 2026 +0200
+
+    Fix frontend build: missing @types/node, wrong defineConfig import
+    
+    Vercel build failed with TS errors in vite.config.ts - node:path and
+    __dirname were unresolvable because @types/node was never added as a
+    dependency, and the "test" (Vitest) config block failed to type-check
+    because defineConfig was imported from "vite" instead of
+    "vitest/config" (only the latter knows about the Vitest-specific
+    config extensions).
+    
+    Also fixes tsconfig.node.json emitting stray vite.config.js/.d.ts
+    next to the source file - TypeScript project references don't allow
+    a referenced project to fully disable emit (noEmit), so redirected
+    its output into node_modules instead, which is already gitignored.
+    
+    Verified locally: npm install && npm run build now succeeds.
+    Committing package-lock.json for reproducible installs going forward.
+
+commit a997c6a3bcafaa8f85cc2caf44e4e774d463659c
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 12:56:02 2026 +0200
+
+    Fully qualify the mirror push's destination ref
+    
+    The GitHub mirror repo starts out completely empty, so git has no
+    existing refs to match "main" against and refuses to guess what
+    "HEAD:main" should become. Spelling out HEAD:refs/heads/main removes
+    the ambiguity.
+
+commit 5beaabd2a7503a7b79df47dc1b4786278a7d985a
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 12:53:52 2026 +0200
+
+    Fix mirror job failing on reused shell-executor checkouts
+    
+    The shell executor reuses the same working directory between runs,
+    so "git remote add github ..." only worked the first time - the
+    second run failed with "remote github already exists". Push straight
+    to a URL instead of a named remote, which is safe to run repeatedly.
+
+commit d43e7a753aaea317a40269911c1d6e6b64849bd6
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 12:42:04 2026 +0200
+
+    Target the mirror job at our own runner instead of Docker
+    
+    Department instance runners have been stale for 3+ years - registered
+    a project runner on Adriaan's laptop instead (shell executor, tag
+    resvis-local). Dropped the Docker image reference since the shell
+    executor doesn't use it.
+
+commit 939f171ba22acda1392fd370707bbbf82c6ab0e6
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 12:13:53 2026 +0200
+
+    Add GitLab CI job to mirror main to GitHub
+    
+    Render and Vercel don't support this university's self-hosted GitLab
+    instance directly - only github.com/gitlab.com. This job pushes main
+    to a GitHub mirror on every push, so both platforms have something to
+    deploy from. GitLab remains the source of truth; the GitHub repo is
+    overwritten each run and should never be pushed to directly.
+    
+    Needs a GITHUB_MIRROR_TOKEN CI/CD variable (Protected + Masked) added
+    in GitLab project settings before the job will succeed.
+
+commit 3d1d9c2b284fc80541e04fe210552fa7b9616b86
+Merge: d4792fd a8c7fa9
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 11:59:45 2026 +0200
+
+    Merge feature/parse-endpoint: knowledge-base parse endpoint (Phases 1-5)
+
+commit a8c7fa9c791598de105bb1ba1f54778cf09371ab
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 11:59:16 2026 +0200
+
+    Wire the parse endpoint into a running app, then batch it
+    
+    Phase 4: main.py now boots a real FastAPI app; router.py exposes
+    POST /knowledge-base/parse backed by KnowledgeBaseService, returning
+    a consistent {formula, success, tree, error} shape whether parsing
+    succeeded or failed (always HTTP 200 - failure is data, not a broken
+    request).
+    
+    Phase 5: request/response upgraded to take a list of formulas
+    (ParseKnowledgeBaseRequest/Response), looping the same per-formula
+    logic so one bad formula never blocks the rest of the batch.
+    
+    Verified manually via curl/Swagger UI at each phase. Automated
+    coverage: service-layer tests in test_backlog_2_kb_parser.py, real
+    HTTP-layer tests via a new TestClient fixture in conftest.py and
+    test_backlog_7_reusable_api.py. 18 tests passing.
+
+commit 061ade0f41d5a24b0a719a0fab1f1666dd2726c8
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 11:00:36 2026 +0200
+
+    Turn parse failures into structured errors instead of console prints
+    
+    Vendored lexer/parser previously just printed on bad input and
+    returned None, with no way for calling code to know what went wrong.
+    lexer.py's t_error and parser.py's p_error now raise LexError/
+    ParseError with position info; ParserAdapter.parse_formula() catches
+    both and translates them into FormulaSyntaxError(SyntaxErrorDetail),
+    matching the sequence diagram's ErrorMsg(code, position, message)
+    contract. 3 new error-path tests in test_backlog_2_kb_parser.py (9
+    passing total).
+
+commit 273982f60768539bad9cdd4c40b8abee3fc3e4f9
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 10:45:45 2026 +0200
+
+    Wire real parser integration: text -> syntax tree -> JSON-ready dict
+    
+    Phase 1: ParserAdapter.parse_formula() calls the vendored PLY parser
+    for a single formula (happy path only, error handling comes in Phase 3).
+    Adjusted vendor/parser.py's import to work as a package module and
+    disabled its table-file generation.
+    
+    Phase 2: tree_serializer.serialize_node() recursively converts the
+    parser's Node objects into plain dicts so they can be sent as JSON.
+    Covered by backend/tests/test_backlog_2_kb_parser.py (6 tests, all
+    passing).
+
+commit d4792fd1a5168b3f9a71d07c46ff4f64f9db0624
+Merge: b5887fb 5f2e87a
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 09:59:48 2026 +0200
+
+    Merge GitLab's auto-generated initial commit
+    
+    # Conflicts:
+    #       README.md
+
+commit b5887fb0fab089a963c4cd290f78e80aaaca6cbf
+Author: Adriaan Hiemstra <ad.hiemstra@gmail.com>
+Date:   Tue Aug 18 09:51:42 2026 +0200
+
+    Scaffold feature-based project structure for ResViz
+    
+    Backend (Python) and frontend (React/TS) split into feature folders
+    mirroring the Assignment 1 backlog items, plus the vendored client
+    parser and planning documents. Structure only, no implementation yet.
+
+commit 5f2e87adb7bbe5f5168d0730f5f7256efdd865c0
+Author: Adriaan Hiemstra <hmsadr001@cs.uct.ac.za>
+Date:   Sun Aug 2 15:36:56 2026 +0200
+
+    Initial commit

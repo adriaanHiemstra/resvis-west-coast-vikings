@@ -23,6 +23,8 @@ export interface ResolutionStep {
   resolvent: Clause | null;
   resolvedOn: string;
   isEmptyClause: boolean;
+  /** Plain-English account of this step, e.g. "Clause 1 and Clause 2 share P with opposite signs...". */
+  explanation: string;
 }
 
 /** true = goal proven, false = goal refuted (does not follow), null = indeterminate (step limit reached). */
@@ -35,6 +37,8 @@ export interface DerivationTrace {
   stepLimitReached: boolean;
   kbClauses: Clause[];
   goalClause: Clause | null;
+  /** Plain-English summary of the whole derivation, one line per step plus a verdict line. */
+  transcript: string[];
 }
 
 export interface ParseError {

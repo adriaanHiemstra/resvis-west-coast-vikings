@@ -51,6 +51,7 @@ class ResolutionStepResponse(BaseModel):
     resolvent_clause_id: int
     resolvent: ClauseResponse
     is_contradiction: bool
+    explanation: str
 
 
 class ResolutionResultResponse(BaseModel):
@@ -60,6 +61,7 @@ class ResolutionResultResponse(BaseModel):
     clauses: list[ClauseRecordResponse]
     steps: list[ResolutionStepResponse]
     limit_reason: str | None
+    transcript: list[str]
 
 
 class ResolutionErrorResponse(BaseModel):

@@ -56,7 +56,7 @@ class ParserAdapter:
         except LexError as exc:
             raise FormulaSyntaxError(
                 SyntaxErrorDetail(
-                    code="ILLEGALCHARACTER",
+                    code="ILLEGAL_CHARACTER",
                     position=exc.position,
                     message=str(exc),
                 )

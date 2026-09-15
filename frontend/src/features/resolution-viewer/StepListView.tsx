@@ -44,6 +44,9 @@ export function StepListView({ steps, currentIndex }: StepListViewProps) {
               <span className="font-mono text-[#7f948a]">→</span>
               <ClauseChip clause={step.resolvent} />
             </div>
+            {step.explanation && (
+              <p className="mt-2 text-xs leading-relaxed text-[#517063]">{step.explanation}</p>
+            )}
             {isFinal && (
               <p className="mt-2 text-xs font-bold text-danger-text">Contradiction. This step disproves satisfiability.</p>
             )}

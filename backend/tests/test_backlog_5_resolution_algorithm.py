@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from resvis.features.cnf.models import Clause, CnfClauseSet, Literal
 from resvis.features.resolution.engine import ResolutionEngine, resolve_pair
+from resvis.features.resolution.explain import build_transcript, explain_step
 from resvis.features.resolution.models import (
     ClauseOrigin,
     ClauseRecord,
@@ -100,6 +101,29 @@ def test_resolution_step_records_parents_pivot_and_resolvent():
     assert step.to_dict()["resolvent"]["raw"] == "Q"
 
 
+def test_resolution_step_explanation_defaults_to_empty_and_serializes():
+    default_step = ResolutionStep(
+        step_number=1,
+        left_clause_id=1,
+        right_clause_id=2,
+        pivot="P",
+        resolvent_clause_id=3,
+        resolvent=Clause((Literal("Q"),)),
+    )
+    assert default_step.explanation == ""
+
+    explained_step = ResolutionStep(
+        step_number=1,
+        left_clause_id=1,
+        right_clause_id=2,
+        pivot="P",
+        resolvent_clause_id=3,
+        resolvent=Clause((Literal("Q"),)),
+        explanation="Clause 1 (P) and Clause 2 (¬P) share P with opposite signs, so it cancels out, leaving Q.",
+    )
+    assert explained_step.to_dict()["explanation"] == explained_step.explanation
+
+
 def test_empty_resolvent_marks_a_contradiction():
     step = ResolutionStep(
         step_number=2,
@@ -138,6 +162,17 @@ def test_resolution_result_serializes_a_complete_trace():
     assert result.completed is True
     assert list(result) == [contradiction]
     assert result.to_dict()["steps"][0]["is_contradiction"] is True
+
+
+def test_resolution_result_transcript_defaults_to_empty_and_serializes():
+    default_result = ResolutionResult(status=ResolutionStatus.NOT_ENTAILED)
+    assert default_result.transcript == ()
+
+    result = ResolutionResult(
+        status=ResolutionStatus.ENTAILED,
+        transcript=("Step 1: ...", "Verdict: the goal is entailed."),
+    )
+    assert result.to_dict()["transcript"] == list(result.transcript)
 
 
 def test_limit_reached_requires_an_explanation():
@@ -247,6 +282,31 @@ def test_resolvent_order_is_deterministic_and_inputs_are_not_modified():
 def test_resolve_pair_rejects_non_clause_inputs(left, right):
     with pytest.raises(TypeError, match="two Clause objects"):
         resolve_pair(left, right)
+@pytest.mark.parametrize(
+    ("left_literals", "right_literals", "expected"),
+    [
+        (
+            [Literal("HighGrades", negated=True), Literal("Qualified")],
+            [Literal("HighGrades")],
+            "Clause 1 (¬HighGrades ∨ Qualified) and Clause 2 (HighGrades) share "
+            "HighGrades with opposite signs, so it cancels out, leaving Qualified.",
+        ),
+        (
+            [Literal("P")],
+            [Literal("P", negated=True)],
+            "Clause 1 (P) and Clause 2 (¬P) share P with opposite signs, so it "
+            "cancels out, leaving nothing — a contradiction (⊥).",
+        ),
+    ],
+)
+def test_explain_step_describes_the_resolution_in_plain_english(
+    left_literals, right_literals, expected
+):
+    left = make_record(1, left_literals)
+    right = make_record(2, right_literals)
+    candidate = resolve_pair(left.clause, right.clause)[0]
+
+    assert explain_step(left, right, candidate) == expected
 
 
 def make_record(
@@ -434,6 +494,26 @@ def test_engine_proves_a_goal_and_records_the_priority_driven_trace():
     assert result.clauses[-1].clause == Clause()
 
 
+def test_engine_wires_the_explanation_into_each_step():
+    knowledge_base = CnfClauseSet(
+        (
+            Clause((Literal("P", True), Literal("Q"))),
+            Clause((Literal("Q", True), Literal("R"))),
+            Clause((Literal("P"),)),
+        )
+    )
+    negated_goal = CnfClauseSet((Clause((Literal("R", True),)),))
+
+    result = ResolutionEngine().run(knowledge_base, negated_goal)
+
+    first_step = result.steps[0]
+    assert str(first_step.left_clause_id) in first_step.explanation
+    assert str(first_step.right_clause_id) in first_step.explanation
+
+    last_step = result.steps[-1]
+    assert last_step.explanation.endswith("a contradiction (⊥).")
+
+
 def test_engine_reports_not_entailed_after_all_useful_pairs_are_exhausted():
     result = ResolutionEngine().run(
         CnfClauseSet((Clause((Literal("P"),)),)),
@@ -444,6 +524,8 @@ def test_engine_reports_not_entailed_after_all_useful_pairs_are_exhausted():
     assert result.entailed is False
     assert result.completed is True
     assert result.steps == ()
+    assert result.transcript[-1].startswith("Verdict:")
+
 
 
 def test_contradictory_knowledge_base_entails_any_goal():
@@ -499,6 +581,8 @@ def test_step_limit_returns_the_partial_trace():
 
     assert result.status is ResolutionStatus.LIMIT_REACHED
     assert len(result.steps) == 1
+    assert len(result.transcript) == len(result.steps) + 1
+
     assert "step limit" in result.limit_reason.lower()
 
 
@@ -662,3 +746,71 @@ def test_http_contract_returns_a_partial_trace_when_a_limit_is_reached():
     assert result["completed"] is False
     assert len(result["steps"]) == 1
     assert result["limit_reason"]
+
+
+def test_http_contract_exposes_explanations_and_the_full_transcript():
+    response = make_client().post(
+        "/resolution/run",
+        json={"knowledge_base": ["(P -> Q)", "(Q -> R)", "P"], "goal": "R"},
+    )
+
+    assert response.status_code == 200
+    result = response.json()["result"]
+    assert all(step["explanation"] for step in result["steps"])
+    assert len(result["transcript"]) == len(result["steps"]) + 1
+    assert result["transcript"][-1].startswith("Verdict:")
+
+
+@pytest.mark.parametrize(
+    ("status", "limit_reason", "expected_verdict"),
+    [
+        (
+            ResolutionStatus.ENTAILED,
+            None,
+            "Verdict: the empty clause (⊥) was derived, so the goal is entailed by the knowledge base.",
+        ),
+        (
+            ResolutionStatus.NOT_ENTAILED,
+            None,
+            "Verdict: every useful clause pair was resolved without deriving a contradiction, so the goal is not entailed.",
+        ),
+        (
+            ResolutionStatus.LIMIT_REACHED,
+            "Maximum resolution step limit of 1000 reached",
+            "Verdict: resolution stopped early — Maximum resolution step limit of 1000 reached — so entailment is indeterminate.",
+        ),
+    ],
+)
+def test_build_transcript_ends_with_the_correct_verdict_line(
+    status, limit_reason, expected_verdict
+):
+    step = ResolutionStep(
+        step_number=1,
+        left_clause_id=1,
+        right_clause_id=2,
+        pivot="P",
+        resolvent_clause_id=3,
+        resolvent=Clause((Literal("Q"),)),
+        explanation="Clause 1 (P) and Clause 2 (¬P) share P with opposite signs, so it cancels out, leaving Q.",
+    )
+
+    transcript = build_transcript(status, (step,), limit_reason)
+
+    assert transcript[0] == "Step 1: " + step.explanation
+    assert transcript[-1] == expected_verdict
+    assert len(transcript) == 2
+
+def test_engine_populates_the_full_transcript_when_entailed():
+    knowledge_base = CnfClauseSet(
+        (
+            Clause((Literal("P", True), Literal("Q"))),
+            Clause((Literal("Q", True), Literal("R"))),
+            Clause((Literal("P"),)),
+        )
+    )
+    negated_goal = CnfClauseSet((Clause((Literal("R", True),)),))
+
+    result = ResolutionEngine().run(knowledge_base, negated_goal)
+
+    assert len(result.transcript) == len(result.steps) + 1
+    assert result.transcript[-1].startswith("Verdict:")

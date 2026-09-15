@@ -39,6 +39,9 @@ export function StepTreeView({ steps, currentIndex }: StepTreeViewProps) {
           <line x1="140" y1="0" x2="80" y2="36" stroke="currentColor" strokeWidth="1.5" />
         </svg>
         <TreeNode clause={step.resolvent} tone={isFinal ? "final" : "resolvent"} />
+        {step.explanation && (
+          <p className="mt-3 max-w-sm text-center text-xs leading-relaxed text-[#517063]">{step.explanation}</p>
+        )}
         {isFinal && (
           <p className="mt-3 text-xs font-bold text-danger-text">Contradiction. This step disproves satisfiability.</p>
         )}

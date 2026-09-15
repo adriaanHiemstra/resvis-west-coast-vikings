@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from resvis.features.cnf.models import Clause, CnfClauseSet, Literal
+from resvis.features.resolution.explain import build_transcript, explain_step
 from resvis.features.resolution.models import (
     ClauseOrigin,
     ClauseRecord,
@@ -109,6 +110,8 @@ class ResolutionEngine:
             return ResolutionResult(
                 status=ResolutionStatus.ENTAILED,
                 clauses=tuple(records),
+                transcript=build_transcript(ResolutionStatus.ENTAILED, ()),
+
             )
 
         prioritiser = ClausePrioritiser(records)
@@ -151,6 +154,7 @@ class ResolutionEngine:
                     pivot=candidate.pivot,
                     resolvent_clause_id=derived.clause_id,
                     resolvent=derived.clause,
+                    explanation=explain_step(left, right, candidate),
                 )
 
                 records.append(derived)
@@ -163,6 +167,8 @@ class ResolutionEngine:
                         status=ResolutionStatus.ENTAILED,
                         clauses=tuple(records),
                         steps=tuple(steps),
+                        transcript=build_transcript(ResolutionStatus.ENTAILED, tuple(steps)),
+
                     )
 
                 prioritiser.add_clause(derived)
@@ -171,6 +177,8 @@ class ResolutionEngine:
             status=ResolutionStatus.NOT_ENTAILED,
             clauses=tuple(records),
             steps=tuple(steps),
+            transcript=build_transcript(ResolutionStatus.NOT_ENTAILED, tuple(steps)),
+
         )
 
     @staticmethod
@@ -250,4 +258,6 @@ class ResolutionEngine:
             clauses=tuple(records),
             steps=tuple(steps),
             limit_reason=reason,
+            transcript=build_transcript(ResolutionStatus.LIMIT_REACHED, tuple(steps), reason),
+
         )

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { GitBranch, List, Maximize2, Minimize2, Network, Route } from "lucide-react";
+import { FileText, GitBranch, List, Maximize2, Minimize2, Network, Route } from "lucide-react";
 import type { DerivationTrace } from "@shared/api/types";
 import { verdictLabel, verdictTone } from "@features/ux-theme";
 import { StepListView } from "./StepListView";
 import { StepTreeView } from "./StepTreeView";
+import { TranscriptView } from "./TranscriptView";
 import { DebuggerControls } from "./DebuggerControls";
 
 interface ResolutionTraceProps {
@@ -21,7 +22,7 @@ const TONE_BANNER: Record<"success" | "danger" | "muted", string> = {
 
 export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: ResolutionTraceProps) {
   const [fullscreen, setFullscreen] = useState(false);
-  const [view, setView] = useState<"list" | "tree">("list");
+  const [view, setView] = useState<"list" | "tree" | "transcript">("list");
 
   const hasTrace = trace !== null && trace.steps.length > 0;
   const total = trace?.steps.length ?? 0;
@@ -64,6 +65,15 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
                 >
                   <GitBranch size={16} />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setView("transcript")}
+                  aria-pressed={view === "transcript"}
+                  className={`grid h-9 w-9 place-items-center transition-colors ${view === "transcript" ? "bg-lime text-forest" : "text-lime hover:bg-[#286451]"}`}
+                  aria-label="Show transcript"
+                >
+                  <FileText size={16} />
+                </button>
               </div>
             )}
             <button
@@ -105,18 +115,21 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
                 `The step limit (${trace.stepLimit}) was reached before a definitive answer — try a smaller knowledge base or a simpler goal.`}
             </p>
           </div>
-            <DebuggerControls
-             index={traceIndex}
-             total={total}
-             onPrev={() => onTraceIndexChange(Math.max(0, traceIndex - 1))}
-             onNext={() => onTraceIndexChange(Math.min(total - 1, traceIndex + 1))}
-            />
-
+            {view !== "transcript" && (
+              <DebuggerControls
+               index={traceIndex}
+               total={total}
+               onPrev={() => onTraceIndexChange(Math.max(0, traceIndex - 1))}
+               onNext={() => onTraceIndexChange(Math.min(total - 1, traceIndex + 1))}
+              />
+            )}
 
             {view === "list" ? (
             <StepListView steps={trace.steps} currentIndex={traceIndex} />
-          ) : (
+          ) : view === "tree" ? (
             <StepTreeView steps={trace.steps} currentIndex={traceIndex} />
+          ) : (
+            <TranscriptView transcript={trace.transcript} />
           )}
         </div>
       )}
