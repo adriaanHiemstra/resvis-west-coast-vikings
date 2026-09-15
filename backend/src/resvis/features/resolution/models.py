@@ -168,6 +168,7 @@ class ResolutionResult:
     clauses: tuple[ClauseRecord, ...] = ()
     steps: tuple[ResolutionStep, ...] = ()
     limit_reason: str | None = None
+    transcript: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.status, ResolutionStatus):
@@ -176,6 +177,8 @@ class ResolutionResult:
             raise TypeError("ResolutionResult.clauses must contain ClauseRecord objects")
         if any(not isinstance(step, ResolutionStep) for step in self.steps):
             raise TypeError("ResolutionResult.steps must contain ResolutionStep objects")
+        if any(not isinstance(line, str) for line in self.transcript):
+            raise TypeError("ResolutionResult.transcript must contain strings")
         if self.status is ResolutionStatus.LIMIT_REACHED:
             if not isinstance(self.limit_reason, str) or not self.limit_reason:
                 raise ValueError("A limited result needs a non-empty limit_reason")
@@ -198,6 +201,7 @@ class ResolutionResult:
             "clauses": [clause.to_dict() for clause in self.clauses],
             "steps": [step.to_dict() for step in self.steps],
             "limit_reason": self.limit_reason,
+            "transcript": list(self.transcript),
         }
 
     def __iter__(self) -> Iterator[ResolutionStep]:

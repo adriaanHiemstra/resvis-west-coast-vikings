@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from resvis.features.cnf.models import Clause, CnfClauseSet, Literal
 from resvis.features.resolution.engine import ResolutionEngine, resolve_pair
-from resvis.features.resolution.explain import explain_step
+from resvis.features.resolution.explain import build_transcript, explain_step
 from resvis.features.resolution.models import (
     ClauseOrigin,
     ClauseRecord,
@@ -742,3 +742,42 @@ def test_http_contract_returns_a_partial_trace_when_a_limit_is_reached():
     assert result["completed"] is False
     assert len(result["steps"]) == 1
     assert result["limit_reason"]
+
+@pytest.mark.parametrize(
+    ("status", "limit_reason", "expected_verdict"),
+    [
+        (
+            ResolutionStatus.ENTAILED,
+            None,
+            "Verdict: the empty clause (⊥) was derived, so the goal is entailed by the knowledge base.",
+        ),
+        (
+            ResolutionStatus.NOT_ENTAILED,
+            None,
+            "Verdict: every useful clause pair was resolved without deriving a contradiction, so the goal is not entailed.",
+        ),
+        (
+            ResolutionStatus.LIMIT_REACHED,
+            "Maximum resolution step limit of 1000 reached",
+            "Verdict: resolution stopped early — Maximum resolution step limit of 1000 reached — so entailment is indeterminate.",
+        ),
+    ],
+)
+def test_build_transcript_ends_with_the_correct_verdict_line(
+    status, limit_reason, expected_verdict
+):
+    step = ResolutionStep(
+        step_number=1,
+        left_clause_id=1,
+        right_clause_id=2,
+        pivot="P",
+        resolvent_clause_id=3,
+        resolvent=Clause((Literal("Q"),)),
+        explanation="Clause 1 (P) and Clause 2 (¬P) share P with opposite signs, so it cancels out, leaving Q.",
+    )
+
+    transcript = build_transcript(status, (step,), limit_reason)
+
+    assert transcript[0] == "Step 1: " + step.explanation
+    assert transcript[-1] == expected_verdict
+    assert len(transcript) == 2
