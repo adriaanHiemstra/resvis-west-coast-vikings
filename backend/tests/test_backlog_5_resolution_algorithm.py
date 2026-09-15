@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from resvis.features.cnf.models import Clause, CnfClauseSet, Literal
 from resvis.features.resolution.engine import ResolutionEngine, resolve_pair
+from resvis.features.resolution.explain import explain_step
 from resvis.features.resolution.models import (
     ClauseOrigin,
     ClauseRecord,
@@ -163,6 +164,17 @@ def test_resolution_result_serializes_a_complete_trace():
     assert result.to_dict()["steps"][0]["is_contradiction"] is True
 
 
+def test_resolution_result_transcript_defaults_to_empty_and_serializes():
+    default_result = ResolutionResult(status=ResolutionStatus.NOT_ENTAILED)
+    assert default_result.transcript == ()
+
+    result = ResolutionResult(
+        status=ResolutionStatus.ENTAILED,
+        transcript=("Step 1: ...", "Verdict: the goal is entailed."),
+    )
+    assert result.to_dict()["transcript"] == list(result.transcript)
+
+
 def test_limit_reached_requires_an_explanation():
     with pytest.raises(ValueError, match="limit_reason"):
         ResolutionResult(status=ResolutionStatus.LIMIT_REACHED)
@@ -270,6 +282,31 @@ def test_resolvent_order_is_deterministic_and_inputs_are_not_modified():
 def test_resolve_pair_rejects_non_clause_inputs(left, right):
     with pytest.raises(TypeError, match="two Clause objects"):
         resolve_pair(left, right)
+@pytest.mark.parametrize(
+    ("left_literals", "right_literals", "expected"),
+    [
+        (
+            [Literal("HighGrades", negated=True), Literal("Qualified")],
+            [Literal("HighGrades")],
+            "Clause 1 (¬HighGrades ∨ Qualified) and Clause 2 (HighGrades) share "
+            "HighGrades with opposite signs, so it cancels out, leaving Qualified.",
+        ),
+        (
+            [Literal("P")],
+            [Literal("P", negated=True)],
+            "Clause 1 (P) and Clause 2 (¬P) share P with opposite signs, so it "
+            "cancels out, leaving nothing — a contradiction (⊥).",
+        ),
+    ],
+)
+def test_explain_step_describes_the_resolution_in_plain_english(
+    left_literals, right_literals, expected
+):
+    left = make_record(1, left_literals)
+    right = make_record(2, right_literals)
+    candidate = resolve_pair(left.clause, right.clause)[0]
+
+    assert explain_step(left, right, candidate) == expected
 
 
 def make_record(
