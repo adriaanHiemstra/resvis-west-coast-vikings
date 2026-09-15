@@ -747,6 +747,20 @@ def test_http_contract_returns_a_partial_trace_when_a_limit_is_reached():
     assert len(result["steps"]) == 1
     assert result["limit_reason"]
 
+
+def test_http_contract_exposes_explanations_and_the_full_transcript():
+    response = make_client().post(
+        "/resolution/run",
+        json={"knowledge_base": ["(P -> Q)", "(Q -> R)", "P"], "goal": "R"},
+    )
+
+    assert response.status_code == 200
+    result = response.json()["result"]
+    assert all(step["explanation"] for step in result["steps"])
+    assert len(result["transcript"]) == len(result["steps"]) + 1
+    assert result["transcript"][-1].startswith("Verdict:")
+
+
 @pytest.mark.parametrize(
     ("status", "limit_reason", "expected_verdict"),
     [
