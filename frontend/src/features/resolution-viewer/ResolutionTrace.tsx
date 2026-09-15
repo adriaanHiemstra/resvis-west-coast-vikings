@@ -104,7 +104,7 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
 
       {hasTrace && trace && (
         <div className={fullscreen ? "mx-auto max-w-4xl" : ""}>
-          <div className={`border-b border-[#d4dbd0] p-5 ${TONE_BANNER[verdictTone(trace.verdict)]}`} aria-live="polite">
+          <div className={`border-b-2 border-line p-5 ${TONE_BANNER[verdictTone(trace.verdict)]}`} aria-live="polite">
             <p className="text-xs font-bold uppercase tracking-[0.16em]">{verdictLabel(trace.verdict)}</p>
             <p className="mt-1 text-sm leading-relaxed">
               {trace.verdict === true &&
