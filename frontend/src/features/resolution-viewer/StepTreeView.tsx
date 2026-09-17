@@ -4,15 +4,22 @@ import { TreeNodeBox } from "./TreeNodeBox";
 interface StepTreeViewProps {
   steps: ResolutionStep[];
   currentIndex: number;
+  fullscreen?: boolean;
 }
 
-export function StepTreeView({ steps, currentIndex }: StepTreeViewProps) {
+export function StepTreeView({ steps, currentIndex, fullscreen }: StepTreeViewProps) {
   const step = steps[currentIndex];
   if (!step) return null;
   const isFinal = step.isEmptyClause;
 
   return (
-    <div className="p-6">
+    <div
+      className={
+        fullscreen
+          ? "flex h-full flex-col items-center justify-center overflow-y-auto p-6"
+          : "p-6"
+      }
+    >
       <p className="mb-4 text-center text-[11px] font-bold uppercase tracking-wider text-[#517063]">
         Step {step.index}
       </p>

@@ -12,9 +12,10 @@ function ClauseChip({ clause }: { clause: Clause | null }) {
 interface StepListViewProps {
   steps: ResolutionStep[];
   currentIndex: number;
+  fullscreen?: boolean;
 }
 
-export function StepListView({ steps, currentIndex }: StepListViewProps) {
+export function StepListView({ steps, currentIndex, fullscreen }: StepListViewProps) {
   const activeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function StepListView({ steps, currentIndex }: StepListViewProps) {
   const visible = steps.slice(0, currentIndex + 1);
 
   return (
-    <div className="trace-scroll space-y-3 p-5">
+    <div className={`${fullscreen ? "h-full overflow-y-auto" : "trace-scroll"} space-y-3 p-5`}>
       {visible.map((step, i) => {
         const isCurrent = i === currentIndex;
         const isFinal = isCurrent && step.isEmptyClause;

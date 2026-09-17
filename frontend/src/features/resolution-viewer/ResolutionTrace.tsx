@@ -32,7 +32,7 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
     <section
       className={
         fullscreen
-          ? "fixed inset-0 z-30 h-screen w-full overflow-y-auto bg-warm shadow-[0_0_0_100vmax_rgba(17,37,29,0.52)]"
+          ? "fixed inset-0 z-30 flex h-screen w-full flex-col overflow-hidden bg-warm shadow-[0_0_0_100vmax_rgba(17,37,29,0.52)]"
           : "overflow-hidden border border-line bg-warm shadow-panel"
       }
       aria-labelledby="trace-heading"
@@ -113,7 +113,13 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
       </div>
 
       {hasTrace && trace && (
-        <div className={fullscreen ? "mx-auto max-w-4xl" : ""}>
+        <div
+          className={
+            fullscreen
+              ? `flex min-h-0 flex-1 flex-col ${view === "fullTree" ? "w-full" : "mx-auto w-full max-w-4xl"}`
+              : ""
+          }
+        >
           <div className={`border-b-2 border-line p-5 ${TONE_BANNER[verdictTone(trace.verdict)]}`} aria-live="polite">
             <p className="text-xs font-bold uppercase tracking-[0.16em]">{verdictLabel(trace.verdict)}</p>
             <p className="mt-1 text-sm leading-relaxed">
@@ -134,15 +140,21 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
               />
             )}
 
-            {view === "list" ? (
-            <StepListView steps={trace.steps} currentIndex={traceIndex} />
-          ) : view === "tree" ? (
-            <StepTreeView steps={trace.steps} currentIndex={traceIndex} />
-          ) : view === "fullTree" ? (
-            <FullTreeView trace={trace} currentIndex={traceIndex} />
-          ) : (
-            <TranscriptView transcript={trace.transcript} />
-          )}
+            {/* In fullscreen, this slot fills whatever height the banner/
+                controls above don't use, so the view below can stretch
+                (and each view scrolls its own overflow) instead of the
+                whole panel needing to be scrolled past the header. */}
+            <div className={fullscreen ? "min-h-0 flex-1 overflow-hidden" : ""}>
+              {view === "list" ? (
+                <StepListView steps={trace.steps} currentIndex={traceIndex} fullscreen={fullscreen} />
+              ) : view === "tree" ? (
+                <StepTreeView steps={trace.steps} currentIndex={traceIndex} fullscreen={fullscreen} />
+              ) : view === "fullTree" ? (
+                <FullTreeView trace={trace} currentIndex={traceIndex} fullscreen={fullscreen} />
+              ) : (
+                <TranscriptView transcript={trace.transcript} fullscreen={fullscreen} />
+              )}
+            </div>
         </div>
       )}
     </section>

@@ -7,6 +7,7 @@ import { TreeNodeBox } from "./TreeNodeBox";
 interface FullTreeViewProps {
   trace: DerivationTrace;
   currentIndex: number;
+  fullscreen?: boolean;
 }
 
 const COLUMN_WIDTH = 190;
@@ -14,7 +15,7 @@ const ROW_HEIGHT = 76;
 const NODE_HALF_WIDTH = 75;
 
 /** Shows every clause in the derivation as one connected diagram, instead of one step at a time. */
-export function FullTreeView({ trace, currentIndex }: FullTreeViewProps) {
+export function FullTreeView({ trace, currentIndex, fullscreen }: FullTreeViewProps) {
   const { nodes, edges } = useMemo(() => buildTreeLayout(trace), [trace]);
   const [zoom, setZoom] = useState(1);
 
@@ -41,7 +42,7 @@ export function FullTreeView({ trace, currentIndex }: FullTreeViewProps) {
   const height = (maxRow + 1) * ROW_HEIGHT;
 
   return (
-    <div className="border-t border-line">
+    <div className={fullscreen ? "flex h-full min-h-0 flex-col border-t border-line" : "border-t border-line"}>
       <div className="flex items-center justify-end gap-2 border-b border-line bg-[#f1f4ec] px-4 py-2">
         <button
           type="button"
@@ -68,7 +69,7 @@ export function FullTreeView({ trace, currentIndex }: FullTreeViewProps) {
         </button>
       </div>
 
-      <div className="trace-scroll overflow-auto p-6">
+      <div className={fullscreen ? "min-h-0 flex-1 overflow-auto p-6" : "trace-scroll overflow-auto p-6"}>
         <div style={{ width: width * zoom, height: height * zoom }}>
           <div className="relative" style={{ width, height, transform: `scale(${zoom})`, transformOrigin: "top left" }}>
             <svg width={width} height={height} className="absolute left-0 top-0 text-line" aria-hidden="true">
