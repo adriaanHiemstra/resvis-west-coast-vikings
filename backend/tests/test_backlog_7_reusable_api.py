@@ -43,6 +43,20 @@ def test_parse_endpoint_empty_list_returns_empty_results(client):
     assert response.json() == {"results": []}
 
 
+def test_parse_endpoint_rejects_an_oversized_batch_with_400(client):
+    """Unlike a malformed formula (still HTTP 200, reported per-item), a
+    knowledge base with too many formulas can't be fixed by looking at
+    one entry - it's rejected outright, using the same ErrorMsg(code,
+    position, message) shape as every other error path."""
+    from resvis.shared.config import MAX_FORMULAS_PER_KNOWLEDGE_BASE
+
+    formulas = ["P"] * (MAX_FORMULAS_PER_KNOWLEDGE_BASE + 1)
+    response = client.post("/knowledge-base/parse", json={"formulas": formulas})
+    assert response.status_code == 400
+    detail = response.json()["detail"]
+    assert detail["code"] == "TOO_MANY_FORMULAS"
+
+
 def test_openapi_schema_documents_the_parse_endpoint():
     """A generated/typed client (any framework, any team) needs the
     published schema to build against without reading our source code -

@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from resvis.features.knowledge_base.parser.adapter import ParserAdapter
 from resvis.features.knowledge_base.parser.tree_serializer import serialize_node
-from resvis.shared.errors import FormulaSyntaxError
+from resvis.shared.config import MAX_FORMULAS_PER_KNOWLEDGE_BASE
+from resvis.shared.errors import FormulaSyntaxError, SyntaxErrorDetail
 
 
 class KnowledgeBaseService:
@@ -49,5 +50,22 @@ class KnowledgeBaseService:
         crash partway through the list - a broken formula in the middle
         just shows up as one `success: False` entry, and every other
         formula still gets parsed normally.
+
+        Raises `FormulaSyntaxError` up front, before parsing anything,
+        if the batch itself is oversized - unlike one malformed formula,
+        an oversized knowledge base isn't something the caller can fix by
+        looking at a single entry's result, so it's rejected as a whole
+        request rather than reported per-item.
         """
+        if len(formulas) > MAX_FORMULAS_PER_KNOWLEDGE_BASE:
+            raise FormulaSyntaxError(
+                SyntaxErrorDetail(
+                    code="TOO_MANY_FORMULAS",
+                    position=MAX_FORMULAS_PER_KNOWLEDGE_BASE,
+                    message=(
+                        "Knowledge base exceeds the maximum of "
+                        f"{MAX_FORMULAS_PER_KNOWLEDGE_BASE} formulas."
+                    ),
+                )
+            )
         return [self.parse_formula(formula) for formula in formulas]

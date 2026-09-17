@@ -12,7 +12,7 @@ from resvis.features.knowledge_base.parser.vendor.lexer import LexError
 from resvis.features.knowledge_base.parser.vendor.parser import Node, ParseError
 from resvis.features.knowledge_base.parser.vendor.parser import parser as _vendor_parser
 from resvis.shared.errors import FormulaSyntaxError, SyntaxErrorDetail
-from resvis.shared.config import MAX_FORMULA_LENGTH
+from resvis.shared.config import MAX_FORMULA_LENGTH, MAX_FORMULA_NESTING_DEPTH
 
 
 @dataclass
@@ -74,5 +74,18 @@ class ParserAdapter:
                         )
                                     
                                 )from exc
-                            
+
+        depth = root.get_max_depth()
+        if depth > MAX_FORMULA_NESTING_DEPTH:
+            raise FormulaSyntaxError(
+                SyntaxErrorDetail(
+                    code="FORMULA_TOO_DEEPLY_NESTED",
+                    position=MAX_FORMULA_NESTING_DEPTH,
+                    message=(
+                        "Formula nesting exceeds the maximum depth of "
+                        f"{MAX_FORMULA_NESTING_DEPTH} levels."
+                    ),
+                )
+            )
+
         return SyntaxTree(source_text=text, root=root)

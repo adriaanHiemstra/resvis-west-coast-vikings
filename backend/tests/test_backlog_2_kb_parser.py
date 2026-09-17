@@ -172,3 +172,38 @@ def test_missing_parenthesis_raises_formula_syntax_error():
         ParserAdapter().parse_formula("P -> Q")
     assert syntaxError_info.value.detail.code == "UNEXPECTED_TOKEN"
     assert "parentheses" in syntaxError_info.value.detail.message
+
+
+def test_formula_within_max_nesting_depth_parses_normally():
+    """A formula right at the nesting limit should still parse - the
+    guard is on exceeding the depth, not on reaching it."""
+    from resvis.shared.config import MAX_FORMULA_NESTING_DEPTH
+
+    formula = "~" * (MAX_FORMULA_NESTING_DEPTH - 1) + "P"
+    tree = ParserAdapter().parse_formula(formula)
+    assert tree.root.get_max_depth() == MAX_FORMULA_NESTING_DEPTH
+
+
+def test_formula_exceeding_max_nesting_depth_raises_formula_syntax_error():
+    """A short but pathologically deep formula (a long chain of bare
+    negations, which the grammar allows without any parentheses) must be
+    rejected even though it comfortably fits under MAX_FORMULA_LENGTH -
+    see config.py's MAX_FORMULA_NESTING_DEPTH docstring for why depth is
+    guarded separately from raw character length."""
+    from resvis.shared.config import MAX_FORMULA_NESTING_DEPTH
+
+    formula = "~" * (MAX_FORMULA_NESTING_DEPTH + 1) + "P"
+    with pytest.raises(FormulaSyntaxError) as syntaxError_info:
+        ParserAdapter().parse_formula(formula)
+    assert syntaxError_info.value.detail.code == "FORMULA_TOO_DEEPLY_NESTED"
+
+
+def test_service_parse_formulas_rejects_a_batch_over_the_formula_count_limit():
+    """A knowledge base with too many formulas is rejected as a whole
+    batch, up front, rather than being parsed one entry at a time."""
+    from resvis.shared.config import MAX_FORMULAS_PER_KNOWLEDGE_BASE
+
+    formulas = ["P"] * (MAX_FORMULAS_PER_KNOWLEDGE_BASE + 1)
+    with pytest.raises(FormulaSyntaxError) as syntaxError_info:
+        KnowledgeBaseService().parse_formulas(formulas)
+    assert syntaxError_info.value.detail.code == "TOO_MANY_FORMULAS"
