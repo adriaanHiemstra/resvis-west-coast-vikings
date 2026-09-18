@@ -10,10 +10,18 @@ import { KnowledgeBaseUpload, ClauseReview } from "@features/knowledge-base";
 import { PropositionEditor } from "@features/proposition-input";
 import { ResolutionTrace } from "@features/resolution-viewer";
 
+/* Passed through to toDerivationTrace as the trace's own stepLimit - purely
+   a display value here (the backend enforces its own limit server-side via
+   runResolution's max_steps default), so the UI can explain why a run was
+   indeterminate. */
 const MAX_RESOLUTION_STEPS = 1_000;
 
 type ViewName = "home" | "projects" | "workspace";
 
+/* The whole app shell: switches between three views (home/projects/
+   workspace) with plain useState instead of a router, and owns only the
+   transient UI state (view, modal, running) that doesn't need to survive
+   a reload - all persisted project data comes from useProjects. */
 export default function App() {
   const [view, setView] = useState<ViewName>("home");
   const [modalOpen, setModalOpen] = useState(false);
@@ -36,10 +44,15 @@ export default function App() {
     removeAnnotation,
   } = useProjects();
 
+  /* Guards against landing on the workspace screen with nothing selected
+     (e.g. the open project was just deleted) - bounces back to the library
+     instead of rendering a broken empty workspace. */
   useEffect(() => {
     if (view === "workspace" && !selectedProject) setView("projects");
   }, [view, selectedProject]);
 
+  /* Small status line shown next to the Run button - recomputed only when
+     selectedProject changes, not on every render. */
   const editorSummary = useMemo(() => {
     if (!selectedProject) return "";
     const clauseCount = selectedProject.knowledgeBase
@@ -50,6 +63,9 @@ export default function App() {
     return `${clauseCount} knowledge clause${clauseCount === 1 ? "" : "s"} · ${goalReady ? "goal ready" : "add a goal"}`;
   }, [selectedProject]);
 
+  /* Both just open the same modal - editingProject is what tells
+     ProjectCreate (and handleModalSubmit below) whether this is a create
+     or a rename. */
   function openCreateModal() {
     setEditingProject(null);
     setModalOpen(true);
@@ -60,6 +76,8 @@ export default function App() {
     setModalOpen(true);
   }
 
+  /* One submit handler for both modes: renames in place if editingProject
+     is set, otherwise creates a new project and immediately opens it. */
   function handleModalSubmit(draft: ProjectDraft) {
     if (editingProject) {
       renameProject(editingProject.id, draft);
@@ -84,6 +102,10 @@ export default function App() {
     showToast("Project deleted.");
   }
 
+/* Runs the full parser -> CNF -> resolution pipeline against the current
+   project's knowledge base and goal, then stores the resulting trace (via
+   setTrace) and summarizes the verdict in a toast. Logs the full CNF/trace
+   to the console too, so the run is inspectable without the visualiser. */
 async function handleRun() {
   if (!selectedProject) return;
 

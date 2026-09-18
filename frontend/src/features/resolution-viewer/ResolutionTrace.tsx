@@ -21,6 +21,10 @@ const TONE_BANNER: Record<"success" | "danger" | "muted", string> = {
   muted: "bg-[#edf0e8] text-[#365448] border-line",
 };
 
+/* The derivation panel: verdict banner, step controls, and one of four
+   interchangeable views (list / tree / full tree / transcript) over the
+   same trace - fullscreen and the chosen view are independent of each
+   other and of which step is current (traceIndex, owned by the parent). */
 export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: ResolutionTraceProps) {
   const [fullscreen, setFullscreen] = useState(false);
   const [view, setView] = useState<"list" | "tree" | "fullTree" | "transcript">("list");
@@ -160,5 +164,9 @@ export function ResolutionTrace({ trace, traceIndex, onTraceIndexChange }: Resol
     </section>
   );
 
+  /* In fullscreen, the panel is teleported to document.body via a portal
+     instead of rendering in place - so its `fixed inset-0` overlay can't
+     be clipped or z-index-fought by any ancestor's own overflow/stacking
+     context (e.g. the workspace grid this component normally sits inside). */
   return fullscreen ? createPortal(panel, document.body) : panel;
 }

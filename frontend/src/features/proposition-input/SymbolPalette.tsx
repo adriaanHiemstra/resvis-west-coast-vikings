@@ -3,6 +3,9 @@ interface SymbolDef {
   label: string;
 }
 
+/* Binary operators carry padding spaces in `symbol` (e.g. " ∧ ") so they
+   read naturally once inserted into a formula - the button itself still
+   shows the trimmed glyph via .trim() below, only the inserted text keeps the padding. */
 const SYMBOLS: SymbolDef[] = [
   { symbol: "¬", label: "Insert negation symbol" },
   { symbol: " ∧ ", label: "Insert conjunction symbol" },

@@ -10,6 +10,8 @@ interface ProjectCardProps {
   onDelete: () => void;
 }
 
+/* One project's card in the library grid - purely presentational, all four
+   actions are just forwarded up to whatever the parent passed in. */
 export function ProjectCard({ project, onOpen, onRename, onDuplicate, onDelete }: ProjectCardProps) {
   return (
     <article className="border border-line bg-warm p-5 transition-all duration-150 hover:-translate-y-0.5 hover:border-[#86a89c] hover:shadow-card">

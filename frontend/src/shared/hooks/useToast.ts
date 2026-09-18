@@ -1,3 +1,5 @@
+/* Drives the shared Toast component: shows a message for 3s, then clears it -
+   each call resets the timer, so a new toast doesn't get cut short by an old one. */
 import { useCallback, useRef, useState } from "react";
 
 export function useToast() {

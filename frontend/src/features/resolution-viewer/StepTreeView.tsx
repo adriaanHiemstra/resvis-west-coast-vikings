@@ -7,8 +7,13 @@ interface StepTreeViewProps {
   fullscreen?: boolean;
 }
 
+/* Tree view of just the current step - the two parent clauses resolving
+   down into one resolvent - as an alternative to StepListView's
+   cumulative list of every step so far. */
 export function StepTreeView({ steps, currentIndex, fullscreen }: StepTreeViewProps) {
   const step = steps[currentIndex];
+  /* Defensive guard against an out-of-range index (e.g. an empty trace) -
+     nothing to draw a tree for. */
   if (!step) return null;
   const isFinal = step.isEmptyClause;
 

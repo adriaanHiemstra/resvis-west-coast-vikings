@@ -1,3 +1,5 @@
+/* Shared labeled form controls: TextField for single-line input,
+   TextAreaField for multi-line - both wire the label's htmlFor to the field's id. */
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {

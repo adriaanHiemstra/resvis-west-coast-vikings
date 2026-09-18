@@ -1,3 +1,5 @@
+/* Shared bordered section wrapper with the kicker/title header pattern
+   reused across the knowledge-base, goal, and annotation panels. */
 import type { ReactNode } from "react";
 
 interface PanelProps {

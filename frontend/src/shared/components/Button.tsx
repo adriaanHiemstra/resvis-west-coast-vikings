@@ -1,3 +1,5 @@
+/* Shared button styling for the whole app: four fixed variants (primary/
+   secondary/ghost/danger), plus IconButton for icon-only actions like Modal's close button. */
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";

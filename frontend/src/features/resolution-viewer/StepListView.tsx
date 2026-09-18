@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 import type { Clause, ResolutionStep } from "@shared/api/types";
 
+/* One clause rendered as a small pill. `clause` is null specifically for a
+   step's resolvent when that step derived the empty clause (a
+   contradiction), which is rendered as "∅ (empty clause)" instead of text. */
 function ClauseChip({ clause }: { clause: Clause | null }) {
   return (
     <span className="inline-flex max-w-full overflow-hidden text-ellipsis border border-[#b7c7bb] bg-[#f1f4ec] px-2 py-1 font-mono text-xs text-[#214638]">
@@ -15,13 +18,20 @@ interface StepListViewProps {
   fullscreen?: boolean;
 }
 
+/* The step-forward/backward "debugger" list view: renders every step up to
+   and including currentIndex, oldest first, so stepping forward reveals
+   the derivation incrementally rather than dumping the whole trace at once. */
 export function StepListView({ steps, currentIndex, fullscreen }: StepListViewProps) {
   const activeRef = useRef<HTMLDivElement>(null);
 
+  /* Keeps the current step scrolled into view as the user steps forward or
+     back, without jumping the whole list to the top on every change. */
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [currentIndex]);
 
+  /* Only steps up to currentIndex are shown - later steps haven't
+     "happened" yet from the debugger's point of view. */
   const visible = steps.slice(0, currentIndex + 1);
 
   return (

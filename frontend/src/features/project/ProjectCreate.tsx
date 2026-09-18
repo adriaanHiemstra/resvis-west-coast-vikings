@@ -9,11 +9,16 @@ interface ProjectCreateProps {
   onSubmit: (draft: ProjectDraft) => void;
 }
 
+/* One modal form serving both create and rename - editingProject being
+   non-null is what decides which mode this is, in the title and on submit. */
 export function ProjectCreate({ open, editingProject, onClose, onSubmit }: ProjectCreateProps) {
   const [name, setName] = useState("");
   const [studentName, setStudentName] = useState("");
   const [error, setError] = useState("");
 
+  /* Re-seeds the form fields every time the modal opens: blank for create,
+     or the existing project's values for rename. Runs on `open` rather
+     than mount, since this component stays mounted between opens. */
   useEffect(() => {
     if (open) {
       setName(editingProject?.name ?? "");
@@ -22,6 +27,8 @@ export function ProjectCreate({ open, editingProject, onClose, onSubmit }: Proje
     }
   }, [open, editingProject]);
 
+  /* Both fields are required - blocks the actual onSubmit call and shows an
+     inline error instead of letting an empty name/student name through. */
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !studentName.trim()) {

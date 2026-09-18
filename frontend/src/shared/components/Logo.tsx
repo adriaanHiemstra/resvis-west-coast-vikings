@@ -1,3 +1,5 @@
+/* The ResViz brand mark. LogoMark is just the icon (used standalone, e.g.
+   in the footer); Logo adds the wordmark next to it. */
 interface LogoProps {
   withWordmark?: boolean;
   className?: string;

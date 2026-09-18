@@ -7,6 +7,10 @@ interface DebuggerControlsProps {
   onNext: () => void;
 }
 
+/* Step forward/backward bar for the resolution trace - purely
+   presentational, the buttons just disable themselves at the first/last
+   step (index <= 0 / index >= total - 1) and defer the actual index
+   change to the parent via onPrev/onNext. */
 export function DebuggerControls({ index, total, onPrev, onNext }: DebuggerControlsProps) {
   return (
     <div className="flex items-center justify-between border-b border-[#d4dbd0] bg-[#f1f4ec] px-5 py-3">

@@ -1,3 +1,5 @@
+/* Shared dialog shell (backdrop, centered panel, close button) used for the
+   project create/rename form and the delete-confirmation prompt. */
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import { IconButton } from "./Button";

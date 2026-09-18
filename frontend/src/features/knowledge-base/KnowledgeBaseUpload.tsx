@@ -11,6 +11,8 @@ interface KnowledgeBaseUploadProps {
   projectName: string;
 }
 
+/* The knowledge-base panel: the line-by-line editor plus import/export and
+   the symbol palette wrapped around it. */
 export function KnowledgeBaseUpload({
   value,
   onChange,
@@ -20,6 +22,10 @@ export function KnowledgeBaseUpload({
   const editorRef = useRef<LineByLineEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /* Reads a .txt or .json file back into the KB text. For .json, accepts
+     either a `clauses` array or a `knowledgeBase` string field; falls back
+     to the raw file text if it's not valid JSON at all, so nothing here
+     can crash on a malformed import. */
   function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -45,6 +51,8 @@ export function KnowledgeBaseUpload({
     e.target.value = "";
   }
 
+  /* Saves the current KB text as a .txt file, entirely client-side - builds
+     an in-memory Blob, points a throwaway link at it, and clicks it. */
   function handleExport() {
     const blob = new Blob([value], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);

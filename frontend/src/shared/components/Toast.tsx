@@ -1,3 +1,5 @@
+/* Bottom-right transient notification, shown/hidden purely by whether
+   `message` is null - see useToast for the auto-dismiss timer. */
 interface ToastProps {
   message: string | null;
 }

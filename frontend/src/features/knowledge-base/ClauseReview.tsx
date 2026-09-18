@@ -11,18 +11,27 @@ interface ClauseReviewProps {
   onRemove: (annotationId: string) => void;
 }
 
+/* Lets the user attach a plain-English meaning to a symbol picked out of
+   the live knowledge base text - one meaning per symbol, upserted via onSave. */
 export function ClauseReview({ knowledgeBase, annotations, onSave, onRemove }: ClauseReviewProps) {
+  /* Re-extracted every time the KB text changes, so newly-typed symbols
+     show up in the picker without any extra wiring from the parent. */
   const symbols = useMemo(() => extractSymbols(knowledgeBase), [knowledgeBase]);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(symbols[0] ?? null);
   const [meaning, setMeaning] = useState("");
 
+  /* Falls back to the first available symbol if the previously selected one
+     no longer exists in the KB text (e.g. its line was deleted). */
   const activeSymbol = selectedSymbol && symbols.includes(selectedSymbol) ? selectedSymbol : (symbols[0] ?? null);
   const existingAnnotation = activeSymbol ? annotations.find((a) => a.symbol === activeSymbol) : undefined;
 
+  /* Keeps the textarea in sync whenever the active symbol changes - shows
+     its existing note if there is one, or an empty field if not. */
   useEffect(() => {
     setMeaning(existingAnnotation?.meaning ?? "");
   }, [activeSymbol, existingAnnotation?.meaning]);
 
+  /* Won't save a blank note, and won't save with nothing selected. */
   function handleSave() {
     if (!activeSymbol || !meaning.trim()) return;
     onSave(activeSymbol, meaning.trim());

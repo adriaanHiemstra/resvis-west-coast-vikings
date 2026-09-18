@@ -13,10 +13,18 @@ interface ProjectLibraryProps {
   onDelete: (id: string) => void;
 }
 
+/* Searchable grid of every saved project, plus the delete confirmation
+   modal - onDelete only ever fires from that modal, never straight off a
+   card's own Delete button (see pendingDeleteId below). */
 export function ProjectLibrary({ projects, onCreate, onOpen, onRename, onDuplicate, onDelete }: ProjectLibraryProps) {
   const [search, setSearch] = useState("");
+  /* Set by a card's Delete click; only actually calls onDelete once the
+     modal's own "Delete Project" button confirms it - this is the one
+     extra step between the click and the real, irreversible removal. */
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
+  /* Recomputed only when the project list or the query changes - matches
+     on project name or student name, case-insensitively. */
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return projects;

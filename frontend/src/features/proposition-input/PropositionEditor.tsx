@@ -13,6 +13,8 @@ interface PropositionEditorProps {
   running: boolean;
 }
 
+/* The goal editor and the Run Resolution button - fully controlled by the
+   parent (value/onChange), so this component holds no project state itself. */
 export function PropositionEditor({ value, onChange, error, summary, onRun, running }: PropositionEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
