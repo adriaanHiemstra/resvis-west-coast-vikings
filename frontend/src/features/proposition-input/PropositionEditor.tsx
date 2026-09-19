@@ -40,7 +40,10 @@ export function PropositionEditor({ value, onChange, error, summary, onRun, runn
           aria-invalid={error ? true : undefined}
         />
         <p id="goal-help" className="mt-3 text-sm leading-relaxed text-muted">
-          Enter one goal to verify. ResViz runs the resolution against the knowledge base and searches for a contradiction.
+          Enter one goal to verify. ResViz runs the resolution against the knowledge base and searches for a contradiction.{" "}
+          <span className="text-[#2f7d5c] ml-1 font-mono">
+            Format example: Q
+          </span>
         </p>
         {error && (
           <div className="mt-4 border border-[#e6b2a7] bg-danger-soft p-3 text-sm leading-relaxed text-danger-text" role="alert">

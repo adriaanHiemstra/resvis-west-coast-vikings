@@ -5,8 +5,10 @@ import { useLocalStorage } from "./useLocalStorage";
 const PROJECTS_KEY = "resviz-projects-v1";
 const SELECTED_KEY = "resviz-selected-project-v1";
 
-const DEFAULT_KNOWLEDGE_BASE = "(¬P ∨ Q)\nP";
-const DEFAULT_GOAL = "Q";
+//const DEFAULT_KNOWLEDGE_BASE = "(¬P ∨ Q)\nP";
+//const DEFAULT_GOAL = "Q";
+const DEFAULT_KNOWLEDGE_BASE = "";
+const DEFAULT_GOAL = "";
 
 /* Short, collision-resistant id for a single-session local app - not
    cryptographically unique, just good enough for one browser's own data. */

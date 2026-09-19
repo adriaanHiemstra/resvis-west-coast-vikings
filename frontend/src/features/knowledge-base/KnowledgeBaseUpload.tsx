@@ -108,7 +108,10 @@ export function KnowledgeBaseUpload({
           className="mt-3 text-sm leading-relaxed text-muted"
         >
           Write one clause per line. Use the symbols from the palette below to
-          represent logical relationships.
+          represent logical relationships.{" "}
+          <span className="text-[#2f7d5c] ml-1 font-mono">
+            Format example: ((A ∨ T) → Q)
+          </span>
         </p>
         <SymbolPalette
           ariaLabel="Logical symbol palette for knowledge base"
