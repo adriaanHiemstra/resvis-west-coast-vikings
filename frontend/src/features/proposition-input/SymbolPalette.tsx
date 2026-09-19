@@ -12,9 +12,9 @@ const SYMBOLS: SymbolDef[] = [
   { symbol: " ∨ ", label: "Insert disjunction symbol" },
   { symbol: " → ", label: "Insert implication symbol" },
   { symbol: " ↔ ", label: "Insert equivalence symbol" },
-  { symbol: " ⊥ ", label: "Insert contradiction symbol" },
-  { symbol: "∀", label: "Insert universal quantifier" },
-  { symbol: "∃", label: "Insert existential quantifier" },
+  //{ symbol: " ⊥ ", label: "Insert contradiction symbol" },  Not in current scope of the project, but could be added later if needed.
+  //{ symbol: "∀", label: "Insert universal quantifier" },
+  //{ symbol: "∃", label: "Insert existential quantifier" },
   { symbol: "(", label: "Insert opening parenthesis" },
   { symbol: ")", label: "Insert closing parenthesis" },
 ];
